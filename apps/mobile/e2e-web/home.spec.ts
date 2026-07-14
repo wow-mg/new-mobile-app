@@ -19,8 +19,8 @@ test('login-first screen exposes social login before DUPR gated participant flow
   await page.getByTestId('kakao-login-button').click();
   await expect(page).toHaveURL(/\/tournaments$/);
   await expect(page.getByTestId('session-actor')).toContainText('actor_sandbox_social_001');
-  await expect(page.getByTestId('mock-tournament-card')).toContainText('PickleHub Sandbox Open');
-  await expect(page.getByTestId('participant-api-mode')).toContainText('샌드박스 모드');
+  await expect(page.getByTestId('mock-tournament-card')).toContainText('PickleHub Open');
+  await expect(page.getByTestId('participant-api-mode')).toContainText('총 1개');
 
   await page.getByTestId('mock-tournament-card').click();
   await expect(page).toHaveURL(/\/tournaments\/tournament_sandbox_001$/);

@@ -41,9 +41,9 @@ export const supportRefundPolicyFaqQuestions = [
 
 export const sandboxFeaturedTournament: MockTournament = {
   tournamentId: 'tournament_sandbox_001',
-  title: 'PickleHub Sandbox Open',
+  title: 'PickleHub Open',
   division: 'Mixed Doubles 3.5+',
-  location: 'Dev/Sandbox Court',
+  location: 'PickleHub Center Court',
   startsAt: '2026-08-09T09:00:00.000+09:00',
   applicationStatus: 'available',
   requiresDupr: true,
@@ -62,7 +62,7 @@ export const sandboxParticipantSession: ParticipantShellState = {
   },
   profile: {
     participantId: 'participant_sandbox_001',
-    displayName: 'Sandbox Player',
+    displayName: 'PickleHub Player',
     duprStatus: 'missing',
     supportChannel: 'oneToOneInquiry',
   },

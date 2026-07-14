@@ -129,7 +129,7 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('explore-home')).toHaveTextContent(/어떤 대회에 나가볼까요/);
     expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 1개');
     expect(screen.getByTestId('court-preview')).toBeTruthy();
-    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/PickleHub Sandbox Open/);
+    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/PickleHub Open/);
 
     fireEvent.press(screen.getByTestId('mock-tournament-card'));
     expect(mockPush).toHaveBeenLastCalledWith(`/tournaments/${sandboxParticipantSession.featuredTournament.tournamentId}`);

@@ -191,7 +191,7 @@ describe('Home screen', () => {
     render(<TournamentsScreen />);
 
     await waitFor(() => expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 1개'));
-    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/PickleHub Sandbox Open/);
+    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/PickleHub Open/);
   });
 
   it('marks utility routes independently when my page hydration degrades', async () => {
