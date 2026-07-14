@@ -147,9 +147,20 @@ export async function getParticipantProfile() {
     .where(eq(participantProfiles.participantId, SANDBOX_PARTICIPANT_ID))
     .limit(1);
 
-  if (existingProfile) return parseProfileRow(existingProfile);
-
   const initialProfile = createInitialProfile();
+
+  if (existingProfile) {
+    if (existingProfile.displayName !== initialProfile.displayName) {
+      const [updatedProfile] = await db
+        .update(participantProfiles)
+        .set({ displayName: initialProfile.displayName, updatedAt: new Date() })
+        .where(eq(participantProfiles.participantId, SANDBOX_PARTICIPANT_ID))
+        .returning();
+      return parseProfileRow(updatedProfile ?? existingProfile);
+    }
+    return parseProfileRow(existingProfile);
+  }
+
   await db.insert(participantProfiles).values({
     participantId: initialProfile.participantId,
     displayName: initialProfile.displayName,
