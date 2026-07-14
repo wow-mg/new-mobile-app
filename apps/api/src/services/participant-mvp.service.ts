@@ -89,7 +89,7 @@ const sandboxTournaments: Tournament[] = [
 function createInitialProfile(): ParticipantProfile {
   return {
     participantId: SANDBOX_PARTICIPANT_ID,
-    displayName: 'Sandbox Player',
+    displayName: 'PickleHub Player',
     duprStatus: 'missing',
     supportChannel: 'oneToOneInquiry',
   };
