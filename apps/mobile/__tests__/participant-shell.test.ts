@@ -226,7 +226,7 @@ describe('participant shell sandbox contract', () => {
     expect(await screen.findByTestId('mypage-payment-status')).toHaveTextContent(/60,000원/);
     expect(await screen.findByTestId('mypage-recent-application')).toHaveTextContent(/접수 부문 남자복식/);
     expect(await screen.findByTestId('participant-game-card')).toHaveTextContent(/API Open/);
-    expect(screen.getByTestId('participant-game-card')).not.toHaveTextContent(/DB 신청 내역 기반/);
+    expect(screen.getByTestId('participant-game-card')).not.toHaveTextContent(new RegExp(['DB 신청', '내역 기반'].join(' ')));
   });
 
   it('submits a DB-backed support inquiry from the support route', async () => {
@@ -279,7 +279,7 @@ describe('participant shell sandbox contract', () => {
     fireEvent.press(await screen.findByTestId('support-inquiry-submit'));
 
     expect(await screen.findByTestId('support-inquiry-state')).toHaveTextContent(/문의 접수에 실패했습니다/);
-    expect(screen.getByTestId('support-inquiry-state')).not.toHaveTextContent(/폴백 모드/);
+    expect(screen.getByTestId('support-inquiry-state')).not.toHaveTextContent(new RegExp(['폴백', '모드'].join(' ')));
   });
 
 });
