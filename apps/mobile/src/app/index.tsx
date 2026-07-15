@@ -399,6 +399,19 @@ function formatTournamentDate(startsAt: string) {
   return new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(date);
 }
 
+function paymentAmountCopy(paymentRecord?: PaymentRecord) {
+  return `${(paymentRecord?.amountKrw ?? 60000).toLocaleString('ko-KR')}원`;
+}
+
+function paymentMethodCopy(paymentRecord?: PaymentRecord) {
+  if (paymentRecord?.paymentMode === 'operatorManagedOffline') return '운영자 오프라인 확인';
+  return '카드결제 (PG)';
+}
+
+function inviteCountdownCopy() {
+  return '유효기간 72시간 · 42:18:05 남음';
+}
+
 function tournamentDdayCopy(startsAt: string) {
   const date = new Date(startsAt);
   if (Number.isNaN(date.getTime())) return '일정 확인';
@@ -669,6 +682,128 @@ export function ProfileEditScreen() {
       <ActionButton testID="profile-edit-dupr-button" label="DUPR 정보 수정" secondary onPress={() => router.push('/dupr-profile')} />
     </ParticipantRouteScaffold>
   );
+}
+
+
+function TerminalTournamentCard({ testID, compact = false }: { testID?: string; compact?: boolean }) {
+  const { featuredTournament } = useParticipantFlow();
+  return (
+    <InfoCard testID={testID} title={featuredTournament.title}>
+      <InfoListItem label="부문" value="남자복식 · 김민준 / 이서연" />
+      <InfoListItem label="일정" value={compact ? '8월 9일 (토) · 오전 9:00' : formatTournamentDate(featuredTournament.startsAt)} />
+      <InfoListItem label="장소" value={featuredTournament.location} />
+    </InfoCard>
+  );
+}
+
+export function PaymentCompleteScreen() {
+  const { paymentRecords } = useParticipantFlow();
+  const paymentRecord = paymentRecords[0];
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="payment-complete-hero" eyebrow="결제완료" title="결제가 완료되었어요" caption="참가 신청이 확정됐습니다" />
+      <TerminalTournamentCard testID="payment-complete-screen" />
+      <InfoCard title="결제 정보">
+        <InfoListItem label="결제금액" value={paymentAmountCopy(paymentRecord)} />
+        <InfoListItem label="결제일시" value="2026.07.30 14:22" />
+        <InfoListItem label="결제수단" value={paymentMethodCopy(paymentRecord)} />
+        <Text style={styles.statusStrong}>대회까지 D-5</Text>
+      </InfoCard>
+      <ActionButton testID="payment-complete-games-button" label="내 경기 보기" onPress={() => router.push('/games')} />
+      <ActionButton testID="payment-complete-home-button" label="홈으로" secondary onPress={() => router.push('/tournaments')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function CancelConfirmScreen() {
+  const { paymentRecords } = useParticipantFlow();
+  const paymentRecord = paymentRecords[0];
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="cancel-confirm-hero" eyebrow="참가 취소" title="참가 취소" caption="환불 정책과 신청 정보를 확인하세요." />
+      <TerminalTournamentCard testID="cancel-confirm-screen" />
+      <InfoCard title="환불 예정 금액">
+        <InfoListItem label="결제금액" value={paymentAmountCopy(paymentRecord)} />
+        <InfoListItem label="결제수단" value={paymentMethodCopy(paymentRecord)} />
+        <Text style={styles.statusStrong}>3일 전 취소 · 100% 환불 대상</Text>
+        <Text style={styles.priceText}>{paymentAmountCopy(paymentRecord)}</Text>
+      </InfoCard>
+      <InfoCard title="환불 규정"><Text style={styles.caption}>대회 3일 전까지 취소: 100% 환불{`
+`}대회 3일 이내 취소: 환불 불가{`
+`}주최 측 사정으로 취소 시: 전액 환불{`
+`}환불은 결제수단으로 영업일 기준 3~5일 소요돼요</Text></InfoCard>
+      <InfoCard title="취소 사유 (선택)"><View style={styles.actionRow}>{['실수 신청', '일정 변경', '개인 사정', '기타'].map((reason) => <Text key={reason} style={styles.secondaryPill}>{reason}</Text>)}</View><Text style={styles.caption}>취소 확정 후에는 되돌릴 수 없으며, 위 환불 정책에 따라 처리돼요</Text></InfoCard>
+      <ActionButton testID="cancel-confirm-button" label="취소 확정하기" onPress={() => router.push('/cancel-complete')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function CancelCompleteScreen() {
+  const { paymentRecords } = useParticipantFlow();
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="cancel-complete-hero" eyebrow="취소 완료" title="취소가 완료됐어요" caption="환불은 영업일 기준 3~5일 이내 처리돼요" />
+      <TerminalTournamentCard testID="cancel-complete-screen" />
+      <InfoCard title="환불 정보"><InfoListItem label="환불 금액" value={paymentAmountCopy(paymentRecords[0])} /><InfoListItem label="환불 예정일" value="2026.08.04 (예상)" /><InfoListItem label="환불 수단" value={paymentMethodCopy(paymentRecords[0])} /></InfoCard>
+      <ActionButton testID="cancel-complete-reservations-button" label="예약내역 보기" onPress={() => router.push('/reservation-history')} />
+      <ActionButton testID="cancel-complete-home-button" label="홈으로" secondary onPress={() => router.push('/tournaments')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function PaymentFailureScreen() {
+  const { paymentRecords } = useParticipantFlow();
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="payment-failure-hero" eyebrow="결제실패" title="결제에 실패했어요" caption="카드 승인이 거절됐어요. 다시 시도해주세요" />
+      <TerminalTournamentCard testID="payment-failure-screen" />
+      <InfoCard title="결제 정보"><InfoListItem label="결제금액" value={paymentAmountCopy(paymentRecords[0])} /><InfoListItem label="실패 일시" value="2026.07.30 14:22" /><InfoListItem label="결제수단" value={paymentMethodCopy(paymentRecords[0])} /><Text style={styles.blockerText}>실패 사유: 카드 한도 초과 (카드사 승인 거절)</Text></InfoCard>
+      <ActionButton testID="payment-failure-retry-button" label="다시 결제하기" onPress={() => router.push('/payment-complete')} />
+      <ActionButton testID="payment-failure-home-button" label="홈으로" secondary onPress={() => router.push('/tournaments')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function InviteDetailScreen() {
+  const { profile, featuredTournament } = useParticipantFlow();
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="invite-detail-hero" eyebrow="초대장" title="피클볼 대회 파트너 초대장" caption={`${featuredTournament.title} · 남자복식 · 8월 9일 (토)`} />
+      <InfoCard testID="invite-detail-screen" title={profile.displayName}><Text style={styles.badge}>파트너 대기중</Text><Text style={styles.bigDupr}>PICKLE-7X9K2</Text><ActionButton testID="invite-kakao-button" label="카카오톡으로 초대하기" onPress={() => undefined} /><ActionButton testID="invite-copy-button" label="초대 링크 복사하기" secondary onPress={() => undefined} /><Text style={styles.statusStrong}>대기중</Text><Text style={styles.caption}>{inviteCountdownCopy()}</Text></InfoCard>
+      <ActionButton testID="invite-resend-button" label="링크 재발송 (최대 3회)" secondary onPress={() => undefined} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function PartnerAcceptScreen() {
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="partner-accept-hero" eyebrow="파트너 수락" title="김민준님이 파트너로 초대했어요" caption="수락하면 대표자가 신청 및 결제를 진행합니다" />
+      <TerminalTournamentCard testID="partner-accept-screen" compact />
+      <InfoCard title="초대자 김민준 · DUPR 4.2"><Text style={styles.caption}>{inviteCountdownCopy()}</Text></InfoCard>
+      <ActionButton testID="partner-accept-button" label="초대 수락하기" onPress={() => router.push('/payment-complete')} />
+      <ActionButton testID="partner-decline-button" label="거절하기" secondary onPress={() => router.push('/partner-declined')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+function InviteTerminalScreen({ testID, heroTestID, eyebrow, title, caption }: { testID: string; heroTestID: string; eyebrow: string; title: string; caption: string }) {
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID={heroTestID} eyebrow={eyebrow} title={title} caption={caption} />
+      <TerminalTournamentCard testID={testID} compact />
+      <ActionButton testID={`${testID}-reinvite-button`} label="다른 파트너 초대하기" onPress={() => router.push('/invite')} />
+      <ActionButton testID={`${testID}-cancel-button`} label="참가 취소하기" secondary onPress={() => router.push('/cancel-confirm')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function InviteExpiredScreen() {
+  return <InviteTerminalScreen testID="invite-expired-screen" heroTestID="invite-expired-hero" eyebrow="초대 만료" title="초대 링크가 만료됐어요" caption="72시간 내 응답이 없었어요. 다시 초대하거나 취소해주세요" />;
+}
+
+export function PartnerDeclinedScreen() {
+  return <InviteTerminalScreen testID="partner-declined-screen" heroTestID="partner-declined-hero" eyebrow="초대 결과" title="이서연님이 초대를 거절했어요" caption="다른 파트너를 초대하거나 참가를 취소할 수 있어요" />;
 }
 
 const fontSans = 'Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif';

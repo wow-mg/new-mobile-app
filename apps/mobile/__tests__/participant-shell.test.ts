@@ -3,10 +3,18 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react-nativ
 import { participantApplicationErrorCodeSchema } from '@template/contracts';
 import { router } from 'expo-router';
 import Home, {
+  CancelCompleteScreen,
+  CancelConfirmScreen,
   DuprProfileScreen,
   GamesScreen,
+  InviteDetailScreen,
+  InviteExpiredScreen,
   MyPageScreen,
   NotificationsScreen,
+  PartnerAcceptScreen,
+  PartnerDeclinedScreen,
+  PaymentCompleteScreen,
+  PaymentFailureScreen,
   ProfileEditScreen,
   ReservationHistoryScreen,
   SupportScreen,
@@ -208,6 +216,60 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/support');
     fireEvent.press(screen.getByTestId('profile-edit-dupr-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/dupr-profile');
+  });
+
+
+  it('renders payment and cancellation terminal route shells with reference labels', () => {
+    startParticipantSession();
+    render(React.createElement(React.Fragment, null,
+      React.createElement(PaymentCompleteScreen),
+      React.createElement(CancelConfirmScreen),
+      React.createElement(CancelCompleteScreen),
+      React.createElement(PaymentFailureScreen),
+    ));
+
+    expect(screen.getByTestId('payment-complete-hero')).toHaveTextContent(/결제가 완료되었어요/);
+    expect(screen.getByTestId('payment-complete-screen')).toHaveTextContent(/남자복식 · 김민준 \/ 이서연/);
+    expect(screen.getByText('내 경기 보기')).toBeTruthy();
+    expect(screen.getByTestId('cancel-confirm-hero')).toHaveTextContent(/참가 취소/);
+    expect(screen.getByText(/3일 전 취소 · 100% 환불 대상/)).toBeTruthy();
+    expect(screen.getByTestId('cancel-confirm-button')).toHaveTextContent(/취소 확정하기/);
+    expect(screen.getByTestId('cancel-complete-hero')).toHaveTextContent(/취소가 완료됐어요/);
+    expect(screen.getByText(/2026.08.04/)).toBeTruthy();
+    expect(screen.getByTestId('payment-failure-hero')).toHaveTextContent(/결제에 실패했어요/);
+    expect(screen.getByText(/카드 한도 초과/)).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('payment-complete-games-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/games');
+    fireEvent.press(screen.getByTestId('cancel-confirm-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/cancel-complete');
+    fireEvent.press(screen.getByTestId('payment-failure-retry-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/payment-complete');
+  });
+
+  it('renders invite and partner terminal route shells with navigation markers', () => {
+    startParticipantSession();
+    render(React.createElement(React.Fragment, null,
+      React.createElement(InviteDetailScreen),
+      React.createElement(PartnerAcceptScreen),
+      React.createElement(InviteExpiredScreen),
+      React.createElement(PartnerDeclinedScreen),
+    ));
+
+    expect(screen.getByTestId('invite-detail-hero')).toHaveTextContent(/피클볼 대회 파트너 초대장/);
+    expect(screen.getByTestId('invite-detail-screen')).toHaveTextContent(/PICKLE-7X9K2/);
+    expect(screen.getByTestId('invite-kakao-button')).toHaveTextContent(/카카오톡으로 초대하기/);
+    expect(screen.getByTestId('partner-accept-hero')).toHaveTextContent(/김민준님이 파트너로/);
+    expect(screen.getByText(/초대자 김민준 · DUPR 4.2/)).toBeTruthy();
+    expect(screen.getByTestId('invite-expired-hero')).toHaveTextContent(/초대 링크가 만료됐어요/);
+    expect(screen.getByTestId('partner-declined-hero')).toHaveTextContent(/이서연님이 초대를 거절했어요/);
+
+    fireEvent.press(screen.getByTestId('partner-accept-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/payment-complete');
+    fireEvent.press(screen.getByTestId('partner-declined-screen-reinvite-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/invite');
+    fireEvent.press(screen.getByTestId('invite-expired-screen-cancel-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/cancel-confirm');
   });
 
   it('renders support policy copy on the support route', () => {
