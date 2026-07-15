@@ -25,6 +25,7 @@ import Home, {
   SignupCompleteScreen,
   SignupScreen,
   NotificationSettingsScreen,
+  AccountWithdrawalScreen,
   ProfileEditScreen,
   ReservationHistoryScreen,
   SupportScreen,
@@ -238,6 +239,8 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/support');
     fireEvent.press(screen.getByTestId('mypage-notification-settings-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/notification-settings');
+    fireEvent.press(screen.getByTestId('mypage-account-withdrawal-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/account-withdrawal');
   });
 
   it('renders reservation history and profile edit shells from participant state', () => {
@@ -386,6 +389,18 @@ describe('participant shell sandbox contract', () => {
     fireEvent.press(screen.getByTestId('region-apply-button'));
     expect(screen.queryByTestId('region-selector-modal')).toBeNull();
     expect(screen.getByTestId('region-filter-button')).toHaveTextContent(/경기도/);
+  });
+
+  it('renders the account withdrawal reference screen as a non-destructive disabled shell', () => {
+    startParticipantSession();
+    render(React.createElement(AccountWithdrawalScreen));
+
+    expect(screen.getByTestId('account-withdrawal-screen')).toHaveTextContent(/회원탈퇴 안내/);
+    expect(screen.getByTestId('account-withdrawal-disabled-state')).toHaveTextContent(/회원탈퇴가 실행되지 않습니다/);
+    expect(screen.getByTestId('account-withdrawal-disabled-state')).toHaveTextContent(/DB\/API 호출은 별도 승인/);
+    expect(screen.getByTestId('account-withdrawal-disabled-button').props.accessibilityState).toMatchObject({ disabled: true });
+    fireEvent.press(screen.getByTestId('account-withdrawal-support-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/support');
   });
 
   it('renders support policy copy on the support route', () => {

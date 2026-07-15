@@ -686,7 +686,7 @@ export function MyPageScreen() {
   const availableDivisions = getAvailableDivisions(tournamentDivisions);
   const paymentCopy = paymentRecords[0] ? `${paymentRecords[0].status} · ${paymentRecords[0].amountKrw.toLocaleString('ko-KR')}원 · 오프라인 운영자 확인` : '결제 내역 없음 · 오프라인 결제는 운영자 확인 대기';
   const recentApplicationCopy = application ? `최근 신청 · 접수 부문 ${getApplicationDivisionName(application, availableDivisions)}` : undefined;
-  return <ParticipantRouteScaffold active="mypage"><PageHero testID="mypage-layout-hero" eyebrow="마이" title={`${profile.displayName}님`} caption="내 신청, 결제, DUPR, 고객센터를 관리하세요." /><InfoCard testID="mypage-screen" title="프로필"><RouteStatusNotice status={routeStatus.mypage} /><InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} /><InfoListItem label="소속" value="송파피클볼클럽" /><Text testID="mypage-payment-status" style={styles.bodyCopy}>{paymentCopy}</Text>{recentApplicationCopy ? <Text testID="mypage-recent-application" style={styles.caption}>{recentApplicationCopy}</Text> : null}</InfoCard><InfoCard title="빠른 메뉴"><ActionButton testID="mypage-reservations-button" label="예약 내역" secondary onPress={() => router.push('/reservation-history')} /><ActionButton testID="mypage-profile-edit-button" label="프로필 수정" secondary onPress={() => router.push('/profile-edit')} /><ActionButton testID="mypage-dupr-button" label="DUPR 정보 관리" secondary onPress={() => router.push('/dupr-profile')} /><ActionButton testID="mypage-notification-settings-button" label="알림 설정" secondary onPress={() => router.push('/notification-settings')} /><ActionButton testID="mypage-support-button" label="고객센터" secondary onPress={() => router.push('/support')} /></InfoCard><InfoCard title="계정"><Text style={styles.caption}>프로필 수정 · 내 경기 기록 · 결제 내역 · DUPR 정보 관리 · 알림 설정 · 고객센터 · 로그아웃</Text></InfoCard></ParticipantRouteScaffold>;
+  return <ParticipantRouteScaffold active="mypage"><PageHero testID="mypage-layout-hero" eyebrow="마이" title={`${profile.displayName}님`} caption="내 신청, 결제, DUPR, 고객센터를 관리하세요." /><InfoCard testID="mypage-screen" title="프로필"><RouteStatusNotice status={routeStatus.mypage} /><InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} /><InfoListItem label="소속" value="송파피클볼클럽" /><Text testID="mypage-payment-status" style={styles.bodyCopy}>{paymentCopy}</Text>{recentApplicationCopy ? <Text testID="mypage-recent-application" style={styles.caption}>{recentApplicationCopy}</Text> : null}</InfoCard><InfoCard title="빠른 메뉴"><ActionButton testID="mypage-reservations-button" label="예약 내역" secondary onPress={() => router.push('/reservation-history')} /><ActionButton testID="mypage-profile-edit-button" label="프로필 수정" secondary onPress={() => router.push('/profile-edit')} /><ActionButton testID="mypage-dupr-button" label="DUPR 정보 관리" secondary onPress={() => router.push('/dupr-profile')} /><ActionButton testID="mypage-notification-settings-button" label="알림 설정" secondary onPress={() => router.push('/notification-settings')} /><ActionButton testID="mypage-support-button" label="고객센터" secondary onPress={() => router.push('/support')} /></InfoCard><InfoCard title="계정"><Text style={styles.caption}>프로필 수정 · 내 경기 기록 · 결제 내역 · DUPR 정보 관리 · 알림 설정 · 고객센터 · 로그아웃</Text><ActionButton testID="mypage-account-withdrawal-button" label="회원탈퇴 안내" secondary onPress={() => router.push('/account-withdrawal')} /></InfoCard></ParticipantRouteScaffold>;
 }
 
 export function ReservationHistoryScreen() {
@@ -986,6 +986,29 @@ export function NotificationSettingsScreen() {
       <View testID="notification-settings-screen" style={styles.heroCard}>
         <PageHero testID="notification-settings-hero" eyebrow="마이" title="알림 설정" caption="이 기기에서 표시할 알림을 선택하세요. 설정은 현재 화면에만 임시로 유지됩니다." />
         <InfoCard title="알림 항목">{notificationSettingRows.map(([key, title, caption]) => <Pressable key={key} testID={`notification-setting-${key}`} accessibilityRole="switch" accessibilityState={{ checked: preferences[key] }} onPress={() => setPreferences((current) => ({ ...current, [key]: !current[key] }))} style={styles.infoListItem}><Text style={styles.rowRight}>{title} · {preferences[key] ? '켜짐' : '꺼짐'}</Text><Text style={styles.caption}>{caption}</Text></Pressable>)}</InfoCard>
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function AccountWithdrawalScreen() {
+  const { profile } = useParticipantFlow();
+
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <View testID="account-withdrawal-screen" style={styles.heroCard}>
+        <PageHero testID="account-withdrawal-hero" eyebrow="회원탈퇴" title="회원탈퇴 안내" caption="계정 삭제는 본인 확인과 운영자 확인이 필요한 민감 작업입니다." />
+        <InfoCard title="탈퇴 전 확인사항">
+          <InfoListItem label="계정" value={profile.displayName} />
+          <InfoListItem label="대회 신청" value="진행 중인 신청·결제·환불 내역 확인 필요" />
+          <Text style={styles.caption}>참가 신청, 결제 확인, 환불, 경기 기록이 남아 있는 경우 고객센터 확인 후 처리됩니다.</Text>
+        </InfoCard>
+        <InfoCard testID="account-withdrawal-disabled-state" title="현재 화면 동작">
+          <Text style={styles.blockerText}>이 미리보기에서는 회원탈퇴가 실행되지 않습니다.</Text>
+          <Text style={styles.caption}>실제 계정 삭제, 개인정보 삭제, DB/API 호출은 별도 승인과 본인 확인 후 처리해야 합니다.</Text>
+        </InfoCard>
+        <ActionButton testID="account-withdrawal-disabled-button" label="회원탈퇴 요청하기 (비활성)" onPress={() => undefined} disabled />
+        <ActionButton testID="account-withdrawal-support-button" label="고객센터로 문의하기" secondary onPress={() => router.push('/support')} />
       </View>
     </ParticipantRouteScaffold>
   );
