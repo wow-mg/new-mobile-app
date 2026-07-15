@@ -469,7 +469,7 @@ function LoginScreen({ participantApiClient }: { participantApiClient?: Particip
     initialized.current = true;
   }
 
-  const start = () => {
+  const startSandboxPreview = () => {
     startParticipantSession();
     router.push('/tournaments');
   };
@@ -479,8 +479,10 @@ function LoginScreen({ participantApiClient }: { participantApiClient?: Particip
       <Logo /><Text testID="login-logo-text" style={styles.hiddenParityText}>Happickle</Text>
       <Text testID="login-subtitle" style={styles.tagline}>대한피클볼협회 공식 대회 플랫폼</Text>
       <View testID="login-illustration" style={styles.illWrap}><Text style={styles.illIcon}>◌</Text><Text style={styles.illHandle}>╲</Text></View>
-      <Pressable testID="kakao-login-button" accessibilityRole="button" onPress={start} style={[styles.btn, styles.kakaoButton]}><Text style={styles.kakaoButtonText}>카카오로 계속하기</Text></Pressable>
-      <Pressable testID="apple-login-button" accessibilityRole="button" onPress={start} style={[styles.btn, styles.appleButton]}><Text style={styles.appleButtonText}>Apple로 계속하기</Text></Pressable>
+      <Pressable testID="kakao-login-button" accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={[styles.btn, styles.kakaoButton, styles.disabledSocialButton]}><Text style={styles.kakaoButtonText}>카카오로 계속하기</Text></Pressable>
+      <Pressable testID="apple-login-button" accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={[styles.btn, styles.appleButton, styles.disabledSocialButton]}><Text style={styles.appleButtonText}>Apple로 계속하기</Text></Pressable>
+      <Text testID="social-login-pending-copy" style={styles.caption}>소셜 로그인은 준비 중입니다. 지금은 대회 둘러보기로 안전하게 미리 볼 수 있어요.</Text>
+      <Pressable testID="sandbox-login-button" accessibilityRole="button" onPress={startSandboxPreview} style={[styles.btn, styles.previewButton]}><Text style={styles.previewButtonText}>대회 둘러보기</Text></Pressable>
       <Text testID="login-consent-copy" style={styles.hint}>처음이시면 자동으로 회원가입이 진행돼요</Text>
       <Pressable testID="signup-route-button" accessibilityRole="button" onPress={() => router.push('/signup')}><Text style={styles.linkText}>회원가입 폼 미리보기</Text></Pressable>
     </View></View></View>
@@ -1055,7 +1057,10 @@ const styles = StyleSheet.create({
   kakaoButtonText: { color: palette.kakaoInk, fontFamily: fontSans, fontSize: 15, fontWeight: '700' },
   appleButton: { backgroundColor: palette.ink, marginTop: 12 },
   appleButtonText: { color: '#ffffff', fontFamily: fontSans, fontSize: 15, fontWeight: '700' },
-  hint: { color: palette.muted, fontFamily: fontSans, fontSize: 12, fontWeight: '500', marginBottom: 114, marginTop: 16, textAlign: 'center' },
+  disabledSocialButton: { opacity: 0.55 },
+  previewButton: { backgroundColor: palette.brand, marginTop: 12 },
+  previewButtonText: { color: '#ffffff', fontFamily: fontSans, fontSize: 15, fontWeight: '800' },
+  hint: { color: palette.muted, fontFamily: fontSans, fontSize: 12, fontWeight: '500', marginBottom: 80, marginTop: 16, textAlign: 'center' },
   participantShell: { backgroundColor: palette.bg, flex: 1 },
   page: { flex: 1, backgroundColor: palette.bg },
   content: { alignSelf: 'center', gap: 16, maxWidth: 480, padding: 20, paddingBottom: 112, width: '100%' },

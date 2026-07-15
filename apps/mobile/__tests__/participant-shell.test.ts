@@ -136,14 +136,21 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('login-logo-text')).toHaveTextContent('Happickle');
     expect(screen.getByTestId('login-subtitle')).toHaveTextContent('대한피클볼협회 공식 대회 플랫폼');
     expect(screen.getByTestId('kakao-login-button')).toHaveTextContent('카카오로 계속하기');
+    expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByTestId('apple-login-button')).toHaveTextContent('Apple로 계속하기');
+    expect(screen.getByTestId('apple-login-button').props.accessibilityState).toMatchObject({ disabled: true });
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/소셜 로그인은 준비 중입니다/);
     expect(screen.getByTestId('login-consent-copy')).toHaveTextContent('처음이시면 자동으로 회원가입이 진행돼요');
     fireEvent.press(screen.getByTestId('signup-route-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/signup');
     expect(screen.queryByTestId('application-cta')).toBeNull();
     expect(screen.queryByTestId('mock-tournament-card')).toBeNull();
 
+    mockPush.mockClear();
     fireEvent.press(screen.getByTestId('kakao-login-button'));
+    expect(mockPush).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByTestId('sandbox-login-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
   });
 
