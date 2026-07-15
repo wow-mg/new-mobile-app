@@ -628,7 +628,47 @@ export function MyPageScreen() {
   const availableDivisions = getAvailableDivisions(tournamentDivisions);
   const paymentCopy = paymentRecords[0] ? `${paymentRecords[0].status} · ${paymentRecords[0].amountKrw.toLocaleString('ko-KR')}원 · 오프라인 운영자 확인` : '결제 내역 없음 · 오프라인 결제는 운영자 확인 대기';
   const recentApplicationCopy = application ? `최근 신청 · 접수 부문 ${getApplicationDivisionName(application, availableDivisions)}` : undefined;
-  return <ParticipantRouteScaffold active="mypage"><PageHero testID="mypage-layout-hero" eyebrow="마이" title={`${profile.displayName}님`} caption="내 신청, 결제, DUPR, 고객센터를 관리하세요." /><InfoCard testID="mypage-screen" title="프로필"><RouteStatusNotice status={routeStatus.mypage} /><InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} /><InfoListItem label="소속" value="송파피클볼클럽" /><Text testID="mypage-payment-status" style={styles.bodyCopy}>{paymentCopy}</Text>{recentApplicationCopy ? <Text testID="mypage-recent-application" style={styles.caption}>{recentApplicationCopy}</Text> : null}</InfoCard><InfoCard title="빠른 메뉴"><ActionButton testID="mypage-dupr-button" label="DUPR 정보 관리" secondary onPress={() => router.push('/dupr-profile')} /><ActionButton testID="mypage-support-button" label="고객센터" secondary onPress={() => router.push('/support')} /></InfoCard><InfoCard title="계정"><Text style={styles.caption}>프로필 수정 · 내 경기 기록 · 결제 내역 · DUPR 정보 관리 · 알림 설정 · 고객센터 · 로그아웃</Text></InfoCard></ParticipantRouteScaffold>;
+  return <ParticipantRouteScaffold active="mypage"><PageHero testID="mypage-layout-hero" eyebrow="마이" title={`${profile.displayName}님`} caption="내 신청, 결제, DUPR, 고객센터를 관리하세요." /><InfoCard testID="mypage-screen" title="프로필"><RouteStatusNotice status={routeStatus.mypage} /><InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} /><InfoListItem label="소속" value="송파피클볼클럽" /><Text testID="mypage-payment-status" style={styles.bodyCopy}>{paymentCopy}</Text>{recentApplicationCopy ? <Text testID="mypage-recent-application" style={styles.caption}>{recentApplicationCopy}</Text> : null}</InfoCard><InfoCard title="빠른 메뉴"><ActionButton testID="mypage-reservations-button" label="예약 내역" secondary onPress={() => router.push('/reservation-history')} /><ActionButton testID="mypage-profile-edit-button" label="프로필 수정" secondary onPress={() => router.push('/profile-edit')} /><ActionButton testID="mypage-dupr-button" label="DUPR 정보 관리" secondary onPress={() => router.push('/dupr-profile')} /><ActionButton testID="mypage-support-button" label="고객센터" secondary onPress={() => router.push('/support')} /></InfoCard><InfoCard title="계정"><Text style={styles.caption}>프로필 수정 · 내 경기 기록 · 결제 내역 · DUPR 정보 관리 · 알림 설정 · 고객센터 · 로그아웃</Text></InfoCard></ParticipantRouteScaffold>;
+}
+
+export function ReservationHistoryScreen() {
+  const { application, paymentRecords, featuredTournament, tournamentDivisions, routeStatus } = useParticipantFlow();
+  const availableDivisions = getAvailableDivisions(tournamentDivisions);
+  const paymentRecord = paymentRecords[0];
+  const reservationTitle = application ? featuredTournament.title : '예약 내역이 없습니다';
+  const divisionName = application ? getApplicationDivisionName(application, availableDivisions) : '대회 신청 후 예약 내역이 표시됩니다';
+  const paymentCopy = paymentRecord ? `${paymentRecord.amountKrw.toLocaleString('ko-KR')}원 · ${paymentRecord.status}` : '오프라인 결제는 운영자 확인 후 안내됩니다';
+
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="reservation-history-hero" eyebrow="예약 내역" title="내 예약을 확인하세요" caption="신청한 대회와 결제 안내 상태를 한곳에서 확인합니다." />
+      <InfoCard testID="reservation-history-screen" title={reservationTitle}>
+        <RouteStatusNotice status={routeStatus.mypage} />
+        <InfoListItem label="부문" value={divisionName} />
+        <InfoListItem label="상태" value={application?.status ?? '신청 전'} />
+        <InfoListItem label="결제" value={paymentCopy} />
+        <Text style={styles.caption}>참가자 직접 취소와 환불은 1:1 문의로 운영자가 확인합니다.</Text>
+      </InfoCard>
+      <ActionButton testID="reservation-support-button" label="예약/환불 문의하기" secondary onPress={() => router.push('/support')} />
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function ProfileEditScreen() {
+  const { profile } = useParticipantFlow();
+
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="profile-edit-hero" eyebrow="프로필 수정" title="기본 정보를 확인하세요" caption="이름, 소속, DUPR 정보는 참가 신청과 대회 운영에 사용됩니다." />
+      <InfoCard testID="profile-edit-screen" title="기본 정보">
+        <InfoListItem label="이름" value={profile.displayName} />
+        <InfoListItem label="소속" value="송파피클볼클럽" />
+        <InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} />
+        <Text style={styles.caption}>연락처와 본인 확인 정보 변경은 운영자 확인 후 반영됩니다.</Text>
+      </InfoCard>
+      <ActionButton testID="profile-edit-dupr-button" label="DUPR 정보 수정" secondary onPress={() => router.push('/dupr-profile')} />
+    </ParticipantRouteScaffold>
+  );
 }
 
 const fontSans = 'Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif';

@@ -7,6 +7,8 @@ import Home, {
   GamesScreen,
   MyPageScreen,
   NotificationsScreen,
+  ProfileEditScreen,
+  ReservationHistoryScreen,
   SupportScreen,
   TournamentApplicationScreen,
   TournamentsScreen,
@@ -178,12 +180,34 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/mypage');
   });
 
-  it('connects my page shortcuts and support copy', () => {
+  it('connects my page shortcuts and customer utility screens', () => {
     startParticipantSession();
     render(React.createElement(MyPageScreen));
     expect(screen.getByTestId('mypage-screen')).toHaveTextContent(/DUPR/);
+    fireEvent.press(screen.getByTestId('mypage-reservations-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/reservation-history');
+    fireEvent.press(screen.getByTestId('mypage-profile-edit-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/profile-edit');
     fireEvent.press(screen.getByTestId('mypage-support-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/support');
+  });
+
+  it('renders reservation history and profile edit shells from participant state', () => {
+    startParticipantSession();
+    saveParticipantDupr('dupr-777');
+    render(React.createElement(React.Fragment, null,
+      React.createElement(ReservationHistoryScreen),
+      React.createElement(ProfileEditScreen),
+    ));
+
+    expect(screen.getByTestId('reservation-history-hero')).toHaveTextContent(/예약 내역/);
+    expect(screen.getByTestId('reservation-history-screen')).toHaveTextContent(/오프라인 결제/);
+    expect(screen.getByTestId('profile-edit-hero')).toHaveTextContent(/프로필 수정/);
+    expect(screen.getByTestId('profile-edit-screen')).toHaveTextContent(/DUPR-777/);
+    fireEvent.press(screen.getByTestId('reservation-support-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/support');
+    fireEvent.press(screen.getByTestId('profile-edit-dupr-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/dupr-profile');
   });
 
   it('renders support policy copy on the support route', () => {
