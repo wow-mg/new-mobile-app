@@ -17,11 +17,13 @@ import Home, {
   PartnerDeclinedScreen,
   PaymentCompleteScreen,
   PaymentFailureScreen,
+  PaymentScreen,
   ResultConfirmScreen,
   DisputeCompleteScreen,
   DisputeScreen,
   ScoreEntryScreen,
   SignupCompleteScreen,
+  SignupScreen,
   NotificationSettingsScreen,
   ProfileEditScreen,
   ReservationHistoryScreen,
@@ -134,11 +136,37 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('kakao-login-button')).toHaveTextContent('카카오로 계속하기');
     expect(screen.getByTestId('apple-login-button')).toHaveTextContent('Apple로 계속하기');
     expect(screen.getByTestId('login-consent-copy')).toHaveTextContent('처음이시면 자동으로 회원가입이 진행돼요');
+    fireEvent.press(screen.getByTestId('signup-route-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/signup');
     expect(screen.queryByTestId('application-cta')).toBeNull();
     expect(screen.queryByTestId('mock-tournament-card')).toBeNull();
 
     fireEvent.press(screen.getByTestId('kakao-login-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
+  });
+
+  it('renders the local-safe signup shell with safe navigation markers', () => {
+    render(React.createElement(SignupScreen));
+
+    expect(screen.getByTestId('signup-screen')).toHaveTextContent(/회원가입/);
+    expect(screen.getByTestId('signup-account-fields')).toHaveTextContent(/계정 정보/);
+    expect(screen.getByTestId('signup-profile-fields')).toHaveTextContent(/기본 정보/);
+    expect(screen.getByTestId('signup-agreements')).toHaveTextContent(/필수.*이용약관 동의/);
+    expect(screen.getByTestId('signup-local-notice')).toHaveTextContent(/가입 정보는 전송되지 않습니다/);
+    fireEvent.press(screen.getByTestId('signup-back-to-login-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/');
+  });
+
+  it('renders the offline payment shell with safe navigation markers', () => {
+    startParticipantSession();
+    saveParticipantDupr('dupr-777');
+    render(React.createElement(PaymentScreen));
+    expect(screen.getByTestId('payment-screen')).toHaveTextContent(/결제 안내/);
+    expect(screen.getByTestId('payment-order-summary')).toHaveTextContent(/60,000원/);
+    expect(screen.getByTestId('payment-method')).toHaveTextContent(/운영자 오프라인 확인/);
+    expect(screen.getByTestId('payment-local-notice')).toHaveTextContent(/이 화면에서는 결제가 진행되지 않습니다/);
+    fireEvent.press(screen.getByTestId('payment-support-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/support');
   });
 
   it('lets a sandbox participant navigate detail, save DUPR, and submit a mock application', () => {
@@ -182,6 +210,8 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('application-submitted')).toHaveTextContent(/참가 신청 접수 완료/);
     expect(screen.getByTestId('application-submitted')).toHaveTextContent(/접수 부문 혼합복식/);
     expect(screen.getByTestId('application-submitted')).toHaveTextContent(/참가자 직접 취소 불가 · 1:1 문의/);
+    fireEvent.press(screen.getByTestId('application-payment-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/payment');
   });
 
   it('connects bottom tabs, my page shortcuts, and support copy', () => {

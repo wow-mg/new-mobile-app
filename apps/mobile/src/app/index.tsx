@@ -482,6 +482,7 @@ function LoginScreen({ participantApiClient }: { participantApiClient?: Particip
       <Pressable testID="kakao-login-button" accessibilityRole="button" onPress={start} style={[styles.btn, styles.kakaoButton]}><Text style={styles.kakaoButtonText}>카카오로 계속하기</Text></Pressable>
       <Pressable testID="apple-login-button" accessibilityRole="button" onPress={start} style={[styles.btn, styles.appleButton]}><Text style={styles.appleButtonText}>Apple로 계속하기</Text></Pressable>
       <Text testID="login-consent-copy" style={styles.hint}>처음이시면 자동으로 회원가입이 진행돼요</Text>
+      <Pressable testID="signup-route-button" accessibilityRole="button" onPress={() => router.push('/signup')}><Text style={styles.linkText}>회원가입 폼 미리보기</Text></Pressable>
     </View></View></View>
   );
 }
@@ -506,6 +507,35 @@ export type HomeProps = {
 
 export default function Home({ participantApiClient }: HomeProps = {}) {
   return <LoginScreen participantApiClient={participantApiClient} />;
+}
+
+export function SignupScreen() {
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+
+  return (
+    <ScrollView testID="signup-screen" style={styles.page} contentContainerStyle={styles.content}>
+      <PageHero testID="signup-hero" eyebrow="회원가입" title="기본 정보를 확인해 보세요" caption="M0B 화면을 반영한 로컬 미리보기입니다." />
+      <InfoCard testID="signup-account-fields" title="계정 정보">
+        <TextInput testID="signup-email-input" accessibilityLabel="이메일" autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} placeholder="이메일" placeholderTextColor={palette.muted} value={email} style={styles.input} />
+        <TextInput testID="signup-password-input" accessibilityLabel="비밀번호" placeholder="비밀번호 (8자 이상)" placeholderTextColor={palette.muted} secureTextEntry style={styles.input} />
+        <TextInput testID="signup-password-confirm-input" accessibilityLabel="비밀번호 확인" placeholder="비밀번호 확인" placeholderTextColor={palette.muted} secureTextEntry style={styles.input} />
+      </InfoCard>
+      <InfoCard testID="signup-profile-fields" title="기본 정보">
+        <TextInput testID="signup-name-input" accessibilityLabel="이름" onChangeText={setName} placeholder="이름" placeholderTextColor={palette.muted} value={name} style={styles.input} />
+        <TextInput testID="signup-phone-input" accessibilityLabel="연락처" keyboardType="phone-pad" onChangeText={setPhone} placeholder="연락처 (010-0000-0000)" placeholderTextColor={palette.muted} value={phone} style={styles.input} />
+        <View style={styles.actionRow}><Text style={[styles.secondaryPill, styles.selectedPill]}>남성</Text><Text style={styles.secondaryPill}>여성</Text></View>
+        <TextInput testID="signup-birth-input" accessibilityLabel="생년월일 또는 연령대" placeholder="생년월일 또는 연령대" placeholderTextColor={palette.muted} style={styles.input} />
+        <TextInput testID="signup-dupr-input" accessibilityLabel="DUPR ID" placeholder="DUPR ID (선택)" placeholderTextColor={palette.muted} style={styles.input} />
+        <Text style={styles.caption}>DUPR 프로필 스크린샷을 첨부하면 관리자 확인이 빨라져요</Text>
+        <TextInput testID="signup-club-input" accessibilityLabel="소속 클럽" placeholder="소속 · 클럽 (선택)" placeholderTextColor={palette.muted} style={styles.input} />
+      </InfoCard>
+      <InfoCard testID="signup-agreements" title="약관 동의"><Text style={styles.bodyCopy}>☑ [필수] 개인정보 수집 · 이용에 동의{`\n`}☑ [필수] 이용약관 동의{`\n`}☐ [선택] 마케팅 정보 수신 동의</Text></InfoCard>
+      <Text testID="signup-local-notice" style={styles.blockerText}>이 미리보기에서 가입 정보는 전송되지 않습니다.</Text>
+      <ActionButton testID="signup-back-to-login-button" label="로그인으로 돌아가기" onPress={() => router.push('/')} />
+    </ScrollView>
+  );
 }
 
 export function TournamentsScreen() {
@@ -621,6 +651,7 @@ export function TournamentApplicationScreen({ tournamentId = defaultTournamentId
       {!profileReady ? <Text testID="application-blocker" style={styles.blockerText}>{REQUIRED_DUPR_ERROR}: DUPR 정보를 저장한 뒤 참가 신청을 진행할 수 있어요.</Text> : null}
       <Pressable testID="application-cta" accessibilityRole="button" accessibilityState={{ disabled: !profileReady }} disabled={!profileReady} onPress={submitApplication} style={[styles.primaryAction, !profileReady && styles.disabledAction]}><Text style={styles.primaryActionText}>{profileReady ? '참가 신청하기' : 'DUPR 등록 후 신청 가능'}</Text></Pressable>
       {application ? <Text testID="application-submitted" style={styles.statusStrong}>{applicationSubmittedLabel(apiMode)} · 접수 부문 {submittedDivisionName} · {describeApplicationPolicy(application)}</Text> : null}
+      {application ? <ActionButton testID="application-payment-button" label="결제 안내 확인" secondary onPress={() => router.push('/payment')} /> : null}
     </ParticipantRouteScaffold>
   );
 }
@@ -707,6 +738,26 @@ function TerminalTournamentCard({ testID, compact = false }: { testID?: string; 
       <InfoListItem label="일정" value={compact ? '8월 9일 (토) · 오전 9:00' : formatTournamentDate(featuredTournament.startsAt)} />
       <InfoListItem label="장소" value={featuredTournament.location} />
     </InfoCard>
+  );
+}
+
+export function PaymentScreen() {
+  const { application, featuredTournament, paymentRecords, profile, tournamentDivisions } = useParticipantFlow();
+  const paymentRecord = paymentRecords[0];
+  const divisionName = getApplicationDivisionName(application, getAvailableDivisions(tournamentDivisions), getAvailableDivisions(tournamentDivisions)[0]);
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <PageHero testID="payment-screen" eyebrow="결제 안내" title="오프라인 결제 안내를 확인하세요" caption="신청 접수 후 운영자가 결제 방법과 확인 상태를 안내합니다." />
+      <InfoCard testID="payment-order-summary" title={featuredTournament.title}>
+        <InfoListItem label="참가자" value={profile.displayName} />
+        <InfoListItem label="신청 부문" value={application ? divisionName : '신청 접수 후 확인'} />
+        <InfoListItem label="안내 금액" value={paymentAmountCopy(paymentRecord)} />
+      </InfoCard>
+      <InfoCard testID="payment-method" title="결제 방식"><Text style={styles.statusStrong}>운영자 오프라인 확인</Text><Text style={styles.caption}>{paymentRecord?.operatorNote ?? '결제 수단과 입금 확인은 운영자 안내를 따릅니다.'}</Text></InfoCard>
+      <InfoCard title="환불 규정"><Text style={styles.caption}>대회 3일 전까지 100% · 3일 이내 불가 · 주최 측 취소 시 전액 환불. 취소와 환불은 1:1 문의로 운영자가 확인합니다.</Text></InfoCard>
+      <Text testID="payment-local-notice" style={styles.blockerText}>이 화면에서는 결제가 진행되지 않습니다.</Text>
+      <ActionButton testID="payment-support-button" label="결제 문의하기" onPress={() => router.push('/support')} />
+    </ParticipantRouteScaffold>
   );
 }
 
@@ -1039,6 +1090,7 @@ const styles = StyleSheet.create({
   supportCard: { backgroundColor: '#eef2ff', borderRadius: 24, gap: 12, padding: 18 },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   secondaryPill: { backgroundColor: palette.surface, borderRadius: 999, color: palette.ink, fontFamily: fontSans, fontSize: 13, fontWeight: '800', paddingHorizontal: 12, paddingVertical: 8 },
+  selectedPill: { backgroundColor: palette.brand, color: palette.surface },
   courtPreview: { backgroundColor: palette.mint, height: 150, overflow: 'hidden' },
   courtLineTop: { backgroundColor: 'transparent', borderColor: '#5b9566', borderTopWidth: 3, height: 58, left: 70, position: 'absolute', right: 70, top: 22, transform: [{ skewX: '-22deg' }] },
   courtLineMid: { backgroundColor: '#91b99b', height: 2, left: 62, position: 'absolute', right: 62, top: 70 },
