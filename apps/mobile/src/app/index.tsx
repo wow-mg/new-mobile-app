@@ -806,6 +806,86 @@ export function PartnerDeclinedScreen() {
   return <InviteTerminalScreen testID="partner-declined-screen" heroTestID="partner-declined-hero" eyebrow="초대 결과" title="이서연님이 초대를 거절했어요" caption="다른 파트너를 초대하거나 참가를 취소할 수 있어요" />;
 }
 
+const bracketRounds = [
+  { title: '8강', matches: [
+    ['8월 9일 · 코트 1', '김민준/이서연 vs 박지훈/정수빈', '11:7, 9:11, 11:8 · 승리'],
+    ['8월 9일 · 코트 2', '최현우/송지민 vs 윤태옥/조성민', '11:5, 11:9 · 승리'],
+    ['8월 9일 · 코트 3', '강태양/이하늘 vs 정우진/한소미', '9:11, 11:6, 8:11 · 승리'],
+    ['8월 9일 · 코트 4', '배수현/오지훈 vs 신동엽/유아름', '11:4, 11:9 · 승리'],
+  ] },
+  { title: '4강', matches: [
+    ['8월 9일 · 코트 1', '김민준/이서연 vs 최현우/송지민', '11:6, 11:8 · 승리'],
+    ['8월 9일 · 코트 2', '강태양/이하늘 vs 배수현/오지훈', '11:9, 9:11, 11:7 · 승리'],
+  ] },
+] as const;
+
+export function BracketScreen() {
+  return (
+    <ParticipantRouteScaffold active="games">
+      <View testID="bracket-screen" style={styles.heroCard}>
+        <PageHero testID="bracket-hero" eyebrow="토너먼트" title="대진표" caption="2026 협회장배 전국오픈 · 남자복식" />
+        {bracketRounds.map((round) => <View key={round.title} style={styles.sectionCard}><Text style={styles.sectionTitleSmall}>{round.title}</Text>{round.matches.map(([date, teams, result]) => <StatusListCard key={`${date}-${teams}`} title={teams} meta={date} caption={result} />)}</View>)}
+        <InfoCard testID="bracket-final-card" title="결승"><StatusListCard title="김민준/이서연 vs 강태양/이하늘" meta="8월 9일 · 센터코트" caption="11:8, 9:11, 11:6 · 우승" badgeText="우승" /></InfoCard>
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+const setScores = [['1세트', '11', '7'], ['2세트', '9', '11'], ['3세트', '11', '8']] as const;
+
+function MatchSummary() {
+  return <InfoCard title="8월 9일 (토) · 코트 3"><Text style={styles.cardTitle}>김민준/이서연 vs 박지훈/정수빈</Text></InfoCard>;
+}
+
+export function ScoreEntryScreen() {
+  return (
+    <ParticipantRouteScaffold active="games">
+      <View testID="score-entry-screen" style={styles.heroCard}>
+        <PageHero testID="score-entry-hero" eyebrow="경기 결과" title="점수 입력" />
+        <MatchSummary />
+        <InfoCard title="세트별 점수">{setScores.map(([set, ours, theirs]) => <InfoListItem key={set} label={set} value={`${ours} : ${theirs} · 우리 팀 / 상대 팀`} />)}</InfoCard>
+        <Text style={styles.statusStrong}>입력한 결과는 상대팀 확인 후 확정됩니다</Text>
+        <ActionButton testID="score-entry-submit-button" label="결과 제출하기" onPress={() => router.push('/result-confirm')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function ResultConfirmScreen() {
+  return (
+    <ParticipantRouteScaffold active="games">
+      <View testID="result-confirm-screen" style={styles.heroCard}>
+        <PageHero testID="result-confirm-hero" eyebrow="경기 결과" title="결과 확인" />
+        <MatchSummary />
+        <InfoCard title="제출된 결과"><Text style={styles.statusStrong}>승리: 김민준/이서연 (2:1)</Text>{setScores.map(([set, ours, theirs]) => <InfoListItem key={set} label={set} value={`${ours} : ${theirs}`} />)}<Text style={styles.caption}>김민준님이 8월 9일 14:32에 입력</Text></InfoCard>
+        <Text style={styles.caption}>내용이 맞으면 확인하고, 다르면 이의를 제기해주세요</Text>
+        <ActionButton testID="result-confirm-button" label="내용이 맞아요, 확인하기" onPress={() => router.push('/final-results')} />
+        <ActionButton testID="result-dispute-button" label="이의 제기하기" secondary onPress={() => router.push('/support')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+const finalRanks = [
+  ['1', '박지훈 · 정수빈', '9승 1패'],
+  ['2', '최현우 · 송지민', '8승 2패'],
+  ['3', '윤태욱 · 조성민', '7승 3패'],
+] as const;
+
+export function FinalResultsScreen() {
+  return (
+    <ParticipantRouteScaffold active="games">
+      <View testID="final-results-screen" style={styles.heroCard}>
+        <PageHero testID="final-results-hero" eyebrow="대회가 종료되었습니다" title="2026 협회장배 전국오픈" caption="남자복식 최종 결과" />
+        <InfoCard title="최종 순위">{finalRanks.map(([rank, team, record]) => <InfoListItem key={rank} label={`${rank}위`} value={`${team} · ${record}`} />)}</InfoCard>
+        <InfoCard title="내 최종 순위"><Text style={styles.bigDupr}>5위</Text><Text style={styles.bodyCopy}>김민준 · 이서연 · 8승 3패</Text></InfoCard>
+        <ActionButton testID="final-results-bracket-button" label="전체 대진표 보기" secondary onPress={() => router.push('/bracket')} />
+        <ActionButton testID="final-results-home-button" label="홈으로" onPress={() => router.push('/tournaments')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
 const fontSans = 'Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif';
 const fontMono = 'JetBrains Mono, SF Mono, Menlo, monospace';
 

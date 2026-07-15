@@ -5,16 +5,20 @@ import { router } from 'expo-router';
 import Home, {
   CancelCompleteScreen,
   CancelConfirmScreen,
+  BracketScreen,
   DuprProfileScreen,
   GamesScreen,
   InviteDetailScreen,
   InviteExpiredScreen,
+  FinalResultsScreen,
   MyPageScreen,
   NotificationsScreen,
   PartnerAcceptScreen,
   PartnerDeclinedScreen,
   PaymentCompleteScreen,
   PaymentFailureScreen,
+  ResultConfirmScreen,
+  ScoreEntryScreen,
   ProfileEditScreen,
   ReservationHistoryScreen,
   SupportScreen,
@@ -270,6 +274,39 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/invite');
     fireEvent.press(screen.getByTestId('invite-expired-screen-cancel-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/cancel-confirm');
+  });
+
+  it('renders bracket and match-result route shells with reference labels and navigation markers', () => {
+    startParticipantSession();
+    render(React.createElement(React.Fragment, null,
+      React.createElement(BracketScreen),
+      React.createElement(ScoreEntryScreen),
+      React.createElement(ResultConfirmScreen),
+      React.createElement(FinalResultsScreen),
+    ));
+
+    expect(screen.getByTestId('bracket-screen')).toHaveTextContent(/대진표/);
+    expect(screen.getByTestId('bracket-screen')).toHaveTextContent(/8강/);
+    expect(screen.getByTestId('bracket-final-card')).toHaveTextContent(/센터코트/);
+    expect(screen.getByTestId('bracket-final-card')).toHaveTextContent(/우승/);
+    expect(screen.getByTestId('score-entry-screen')).toHaveTextContent(/점수 입력/);
+    expect(screen.getByTestId('score-entry-screen')).toHaveTextContent(/입력한 결과는 상대팀 확인 후 확정됩니다/);
+    expect(screen.getByTestId('score-entry-submit-button')).toHaveTextContent(/결과 제출하기/);
+    expect(screen.getByTestId('result-confirm-screen')).toHaveTextContent(/제출된 결과/);
+    expect(screen.getByTestId('result-confirm-screen')).toHaveTextContent(/승리: 김민준\/이서연 \(2:1\)/);
+    expect(screen.getByTestId('result-confirm-button')).toHaveTextContent(/내용이 맞아요, 확인하기/);
+    expect(screen.getByTestId('final-results-screen')).toHaveTextContent(/대회가 종료되었습니다/);
+    expect(screen.getByTestId('final-results-screen')).toHaveTextContent(/내 최종 순위/);
+    expect(screen.getByText(/김민준 · 이서연 · 8승 3패/)).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('score-entry-submit-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/result-confirm');
+    fireEvent.press(screen.getByTestId('result-confirm-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/final-results');
+    fireEvent.press(screen.getByTestId('final-results-bracket-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/bracket');
+    fireEvent.press(screen.getByTestId('final-results-home-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
   });
 
   it('renders support policy copy on the support route', () => {
