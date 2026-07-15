@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { router } from 'expo-router';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { ParticipantGame, ParticipantNotification, PaymentRecord, SupportCenterResponse, SupportInquiry, Tournament, TournamentDivision } from '@template/contracts';
@@ -510,16 +510,30 @@ export default function Home({ participantApiClient }: HomeProps = {}) {
 
 export function TournamentsScreen() {
   const { featuredTournament, tournaments, apiMode } = useParticipantFlow();
+  const [region, setRegion] = useState('서울특별시');
+  const [pendingRegion, setPendingRegion] = useState(region);
+  const [regionSelectorOpen, setRegionSelectorOpen] = useState(false);
   const visibleTournaments = tournaments.length ? tournaments : [featuredTournament];
 
   return (
     <ParticipantRouteScaffold active="tournaments">
       <View testID="explore-home" style={styles.heroCard}>
         <Text style={styles.heroTitle}>어떤 대회에 나가볼까요?</Text><View style={styles.searchBox}><Text style={styles.searchText}>⌕  대회명으로 검색</Text></View>
-        <View style={styles.filterToolbar}><Text style={[styles.filterChip, styles.locationChip]}>⌖ 서울특별시⌄</Text><Text style={styles.filterChip}>최신순⌄</Text></View>
+        <View style={styles.filterToolbar}><Pressable testID="region-filter-button" accessibilityRole="button" onPress={() => setRegionSelectorOpen(true)}><Text style={[styles.filterChip, styles.locationChip]}>⌖ {region}⌄</Text></Pressable><Text style={styles.filterChip}>최신순⌄</Text></View>
         <View style={styles.filterRow}>{['접수중', '접수마감', '종료'].map((chip) => <Text key={chip} style={[styles.statusChip, chip === '접수중' && styles.activeChip]}>{chip}</Text>)}</View>
         <View style={styles.cardTopRow}><Text style={styles.sectionTitleSmall}>접수 중인 대회</Text><Text testID="participant-api-mode" style={styles.countText}>총 {visibleTournaments.length}개</Text></View>
       </View>
+      {regionSelectorOpen ? <InfoCard testID="region-selector-modal" title="지역 선택">
+        {[
+          ['seoul', '서울특별시'],
+          ['gyeonggi', '경기도'],
+          ['incheon', '인천광역시'],
+          ['busan', '부산광역시'],
+          ['daegu', '대구광역시'],
+          ['all', '전체 지역'],
+        ].map(([key, label]) => <Pressable key={key} testID={`region-option-${key}`} accessibilityRole="radio" accessibilityState={{ selected: pendingRegion === label }} onPress={() => setPendingRegion(label)} style={styles.infoListItem}><Text style={pendingRegion === label ? styles.statusStrong : styles.bodyCopy}>{pendingRegion === label ? '● ' : '○ '}{label}</Text></Pressable>)}
+        <ActionButton testID="region-apply-button" label="적용하기" onPress={() => { setRegion(pendingRegion); setRegionSelectorOpen(false); }} />
+      </InfoCard> : null}
       {visibleTournaments.map((tournament, index) => {
         const tournamentPath = `/tournaments/${tournament.tournamentId}`;
         return (
@@ -641,7 +655,7 @@ export function MyPageScreen() {
   const availableDivisions = getAvailableDivisions(tournamentDivisions);
   const paymentCopy = paymentRecords[0] ? `${paymentRecords[0].status} · ${paymentRecords[0].amountKrw.toLocaleString('ko-KR')}원 · 오프라인 운영자 확인` : '결제 내역 없음 · 오프라인 결제는 운영자 확인 대기';
   const recentApplicationCopy = application ? `최근 신청 · 접수 부문 ${getApplicationDivisionName(application, availableDivisions)}` : undefined;
-  return <ParticipantRouteScaffold active="mypage"><PageHero testID="mypage-layout-hero" eyebrow="마이" title={`${profile.displayName}님`} caption="내 신청, 결제, DUPR, 고객센터를 관리하세요." /><InfoCard testID="mypage-screen" title="프로필"><RouteStatusNotice status={routeStatus.mypage} /><InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} /><InfoListItem label="소속" value="송파피클볼클럽" /><Text testID="mypage-payment-status" style={styles.bodyCopy}>{paymentCopy}</Text>{recentApplicationCopy ? <Text testID="mypage-recent-application" style={styles.caption}>{recentApplicationCopy}</Text> : null}</InfoCard><InfoCard title="빠른 메뉴"><ActionButton testID="mypage-reservations-button" label="예약 내역" secondary onPress={() => router.push('/reservation-history')} /><ActionButton testID="mypage-profile-edit-button" label="프로필 수정" secondary onPress={() => router.push('/profile-edit')} /><ActionButton testID="mypage-dupr-button" label="DUPR 정보 관리" secondary onPress={() => router.push('/dupr-profile')} /><ActionButton testID="mypage-support-button" label="고객센터" secondary onPress={() => router.push('/support')} /></InfoCard><InfoCard title="계정"><Text style={styles.caption}>프로필 수정 · 내 경기 기록 · 결제 내역 · DUPR 정보 관리 · 알림 설정 · 고객센터 · 로그아웃</Text></InfoCard></ParticipantRouteScaffold>;
+  return <ParticipantRouteScaffold active="mypage"><PageHero testID="mypage-layout-hero" eyebrow="마이" title={`${profile.displayName}님`} caption="내 신청, 결제, DUPR, 고객센터를 관리하세요." /><InfoCard testID="mypage-screen" title="프로필"><RouteStatusNotice status={routeStatus.mypage} /><InfoListItem label="DUPR" value={hasRequiredDupr(profile) ? `${profile.duprId}` : '미등록'} /><InfoListItem label="소속" value="송파피클볼클럽" /><Text testID="mypage-payment-status" style={styles.bodyCopy}>{paymentCopy}</Text>{recentApplicationCopy ? <Text testID="mypage-recent-application" style={styles.caption}>{recentApplicationCopy}</Text> : null}</InfoCard><InfoCard title="빠른 메뉴"><ActionButton testID="mypage-reservations-button" label="예약 내역" secondary onPress={() => router.push('/reservation-history')} /><ActionButton testID="mypage-profile-edit-button" label="프로필 수정" secondary onPress={() => router.push('/profile-edit')} /><ActionButton testID="mypage-dupr-button" label="DUPR 정보 관리" secondary onPress={() => router.push('/dupr-profile')} /><ActionButton testID="mypage-notification-settings-button" label="알림 설정" secondary onPress={() => router.push('/notification-settings')} /><ActionButton testID="mypage-support-button" label="고객센터" secondary onPress={() => router.push('/support')} /></InfoCard><InfoCard title="계정"><Text style={styles.caption}>프로필 수정 · 내 경기 기록 · 결제 내역 · DUPR 정보 관리 · 알림 설정 · 고객센터 · 로그아웃</Text></InfoCard></ParticipantRouteScaffold>;
 }
 
 export function ReservationHistoryScreen() {
@@ -860,7 +874,67 @@ export function ResultConfirmScreen() {
         <InfoCard title="제출된 결과"><Text style={styles.statusStrong}>승리: 김민준/이서연 (2:1)</Text>{setScores.map(([set, ours, theirs]) => <InfoListItem key={set} label={set} value={`${ours} : ${theirs}`} />)}<Text style={styles.caption}>김민준님이 8월 9일 14:32에 입력</Text></InfoCard>
         <Text style={styles.caption}>내용이 맞으면 확인하고, 다르면 이의를 제기해주세요</Text>
         <ActionButton testID="result-confirm-button" label="내용이 맞아요, 확인하기" onPress={() => router.push('/final-results')} />
-        <ActionButton testID="result-dispute-button" label="이의 제기하기" secondary onPress={() => router.push('/support')} />
+        <ActionButton testID="result-dispute-button" label="이의 제기하기" secondary onPress={() => router.push('/dispute')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function SignupCompleteScreen() {
+  const { profile } = useParticipantFlow();
+  return (
+    <ParticipantRouteScaffold active="tournaments">
+      <View testID="signup-complete-screen" style={styles.heroCard}>
+        <PageHero testID="signup-complete-hero" eyebrow="가입 완료" title="회원가입이 완료됐어요" caption="Happickle와 함께 대회를 즐겨보세요" />
+        <InfoCard title={`${profile.displayName}님, 반가워요!`}><Text style={styles.bodyCopy}>DUPR {profile.duprId ?? '미등록'} · 송파피클볼클럽</Text></InfoCard>
+        <ActionButton testID="signup-complete-button" label="시작하기" onPress={() => router.push('/tournaments')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function DisputeScreen() {
+  return (
+    <ParticipantRouteScaffold active="games">
+      <View testID="dispute-screen" style={styles.heroCard}>
+        <PageHero testID="dispute-hero" eyebrow="경기 결과" title="이의 제기" />
+        <MatchSummary />
+        <InfoCard title="제출된 결과"><Text style={styles.statusStrong}>11:7, 9:11, 11:8 (2:1 승)</Text></InfoCard>
+        <InfoCard title="이의 제기 사유"><TextInput testID="dispute-reason-input" accessibilityLabel="이의 제기 사유" multiline maxLength={200} placeholder={'어떤 부분이 다른지 구체적으로 적어주세요\n예: 2세트 점수가 9:11이 아니라 11:9입니다'} placeholderTextColor={palette.muted} style={[styles.input, styles.multilineInput]} /><Text style={styles.caption}>제출하면 주최자가 확인 후 결과를 수정·확정합니다</Text></InfoCard>
+        <ActionButton testID="dispute-submit-button" label="이의 제기 제출하기" onPress={() => router.push('/dispute-complete')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+export function DisputeCompleteScreen() {
+  return (
+    <ParticipantRouteScaffold active="games">
+      <View testID="dispute-complete-screen" style={styles.heroCard}>
+        <PageHero testID="dispute-complete-hero" eyebrow="접수 완료" title="이의 제기가 접수됐어요" caption="주최측 확인 후 24시간 내 결과가 조정돼요" />
+        <InfoCard title="2026 협회장배 전국오픈"><InfoListItem label="제출한 결과" value="11:7, 9:11, 11:8" /><InfoListItem label="이의 제기 사유" value="2세트 점수가 실제와 달라요" /><InfoListItem label="처리 예정" value="24시간 이내 확인" /></InfoCard>
+        <ActionButton testID="dispute-complete-games-button" label="내 경기로 돌아가기" onPress={() => router.push('/games')} />
+        <ActionButton testID="dispute-complete-home-button" label="홈으로" secondary onPress={() => router.push('/tournaments')} />
+      </View>
+    </ParticipantRouteScaffold>
+  );
+}
+
+const notificationSettingRows = [
+  ['game-call', '경기 호출 알림', '내 경기 호출 시 알려드려요', true],
+  ['tournament-notice', '대회 공지 알림', '참가 대회의 새 공지를 알려드려요', true],
+  ['partner-invite', '파트너 초대 알림', '복식 파트너 초대/수락 알림', true],
+  ['payment-refund', '결제/환불 알림', '결제 완료/환불 처리 알림', true],
+  ['marketing', '마케팅 정보 수신', '이벤트·혜택 정보 수신 (선택)', false],
+] as const;
+
+export function NotificationSettingsScreen() {
+  const [preferences, setPreferences] = useState<Record<string, boolean>>(() => Object.fromEntries(notificationSettingRows.map(([key, , , enabled]) => [key, enabled])));
+  return (
+    <ParticipantRouteScaffold active="mypage">
+      <View testID="notification-settings-screen" style={styles.heroCard}>
+        <PageHero testID="notification-settings-hero" eyebrow="마이" title="알림 설정" caption="이 기기에서 표시할 알림을 선택하세요. 설정은 현재 화면에만 임시로 유지됩니다." />
+        <InfoCard title="알림 항목">{notificationSettingRows.map(([key, title, caption]) => <Pressable key={key} testID={`notification-setting-${key}`} accessibilityRole="switch" accessibilityState={{ checked: preferences[key] }} onPress={() => setPreferences((current) => ({ ...current, [key]: !current[key] }))} style={styles.infoListItem}><Text style={styles.rowRight}>{title} · {preferences[key] ? '켜짐' : '꺼짐'}</Text><Text style={styles.caption}>{caption}</Text></Pressable>)}</InfoCard>
       </View>
     </ParticipantRouteScaffold>
   );
@@ -954,6 +1028,7 @@ const styles = StyleSheet.create({
   duprCard: { backgroundColor: palette.mint, borderRadius: 24, gap: 12, padding: 18 },
   bigDupr: { color: palette.ink, fontFamily: fontSans, fontSize: 34, fontWeight: '900' },
   input: { backgroundColor: palette.surface, borderColor: palette.line, borderRadius: 14, borderWidth: 1, color: palette.ink, fontFamily: fontSans, fontSize: 16, paddingHorizontal: 14, paddingVertical: 12 },
+  multilineInput: { minHeight: 132, textAlignVertical: 'top' },
   secondaryAction: { alignItems: 'center', backgroundColor: palette.surface, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11 },
   secondaryActionText: { color: palette.ink, fontFamily: fontSans, fontSize: 15, fontWeight: '900' },
   statusStrong: { color: palette.success, fontFamily: fontSans, fontSize: 14, fontWeight: '900' },

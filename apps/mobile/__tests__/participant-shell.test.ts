@@ -18,7 +18,11 @@ import Home, {
   PaymentCompleteScreen,
   PaymentFailureScreen,
   ResultConfirmScreen,
+  DisputeCompleteScreen,
+  DisputeScreen,
   ScoreEntryScreen,
+  SignupCompleteScreen,
+  NotificationSettingsScreen,
   ProfileEditScreen,
   ReservationHistoryScreen,
   SupportScreen,
@@ -202,6 +206,8 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/profile-edit');
     fireEvent.press(screen.getByTestId('mypage-support-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/support');
+    fireEvent.press(screen.getByTestId('mypage-notification-settings-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/notification-settings');
   });
 
   it('renders reservation history and profile edit shells from participant state', () => {
@@ -303,10 +309,53 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/result-confirm');
     fireEvent.press(screen.getByTestId('result-confirm-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/final-results');
+    fireEvent.press(screen.getByTestId('result-dispute-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/dispute');
     fireEvent.press(screen.getByTestId('final-results-bracket-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/bracket');
     fireEvent.press(screen.getByTestId('final-results-home-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
+  });
+
+  it('renders signup, dispute, and notification utility shells with navigation markers', () => {
+    startParticipantSession();
+    render(React.createElement(React.Fragment, null,
+      React.createElement(SignupCompleteScreen),
+      React.createElement(DisputeScreen),
+      React.createElement(DisputeCompleteScreen),
+      React.createElement(NotificationSettingsScreen),
+    ));
+
+    expect(screen.getByTestId('signup-complete-screen')).toHaveTextContent(/회원가입이 완료됐어요/);
+    expect(screen.getByTestId('signup-complete-button')).toHaveTextContent(/시작하기/);
+    expect(screen.getByTestId('dispute-screen')).toHaveTextContent(/이의 제기 사유/);
+    expect(screen.getByTestId('dispute-submit-button')).toHaveTextContent(/이의 제기 제출하기/);
+    expect(screen.getByTestId('dispute-complete-screen')).toHaveTextContent(/이의 제기가 접수됐어요/);
+    expect(screen.getByTestId('dispute-complete-screen')).toHaveTextContent(/처리 예정/);
+    expect(screen.getByTestId('notification-settings-screen')).toHaveTextContent(/경기 호출 알림/);
+    expect(screen.getByTestId('notification-settings-screen')).toHaveTextContent(/마케팅 정보 수신/);
+
+    fireEvent.press(screen.getByTestId('signup-complete-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
+    fireEvent.press(screen.getByTestId('dispute-submit-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/dispute-complete');
+    fireEvent.press(screen.getByTestId('dispute-complete-games-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/games');
+    fireEvent.press(screen.getByTestId('dispute-complete-home-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
+  });
+
+  it('opens and applies the local region selector from the explore route', () => {
+    startParticipantSession();
+    render(React.createElement(TournamentsScreen));
+
+    fireEvent.press(screen.getByTestId('region-filter-button'));
+    expect(screen.getByTestId('region-selector-modal')).toHaveTextContent(/지역 선택/);
+    expect(screen.getByTestId('region-selector-modal')).toHaveTextContent(/전체 지역/);
+    fireEvent.press(screen.getByTestId('region-option-gyeonggi'));
+    fireEvent.press(screen.getByTestId('region-apply-button'));
+    expect(screen.queryByTestId('region-selector-modal')).toBeNull();
+    expect(screen.getByTestId('region-filter-button')).toHaveTextContent(/경기도/);
   });
 
   it('renders support policy copy on the support route', () => {
