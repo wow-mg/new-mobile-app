@@ -454,7 +454,7 @@ const bottomTabs = [
 
 function BottomNav({ active }: { active: string }) {
   return (
-    <View style={styles.bottomNav}>{bottomTabs.map((tab) => (
+    <View testID="bottom-nav" style={styles.bottomNav}>{bottomTabs.map((tab) => (
       <Pressable key={tab.label} testID={tab.testID} accessibilityRole="button" onPress={() => router.push(tab.route)} style={[styles.navButton, active === tab.active && styles.navButtonActive]}>
         <Text style={[styles.bottomNavItem, active === tab.active && styles.bottomNavItemActive]}>{tab.label}</Text>
       </Pressable>
@@ -492,12 +492,14 @@ function ParticipantRouteScaffold({ active, children }: { active: string; childr
   if (!socialSessionStarted) return <LoginScreen />;
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
-      <View style={styles.header}><View><Logo small /><Text style={styles.headerSubtitle}>대한피클볼협회 공식</Text></View><HeaderBell /></View>
-      {children}
-      <View testID="deferred-reference-screens" style={styles.sectionCard}><Text style={styles.sectionLabel}>운영 예정 기능</Text><Text style={styles.caption}>결제 · 환불 · 대진표 · 점수 입력 · 결과 확정은 운영자 안내에 따라 순차적으로 제공됩니다.</Text></View>
+    <View style={styles.participantShell}>
+      <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+        <View style={styles.header}><View><Logo small /><Text style={styles.headerSubtitle}>대한피클볼협회 공식</Text></View><HeaderBell /></View>
+        {children}
+        <View testID="deferred-reference-screens" style={styles.sectionCard}><Text style={styles.sectionLabel}>운영 예정 기능</Text><Text style={styles.caption}>결제 · 환불 · 대진표 · 점수 입력 · 결과 확정은 운영자 안내에 따라 순차적으로 제공됩니다.</Text></View>
+      </ScrollView>
       <BottomNav active={active} />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -1054,8 +1056,9 @@ const styles = StyleSheet.create({
   appleButton: { backgroundColor: palette.ink, marginTop: 12 },
   appleButtonText: { color: '#ffffff', fontFamily: fontSans, fontSize: 15, fontWeight: '700' },
   hint: { color: palette.muted, fontFamily: fontSans, fontSize: 12, fontWeight: '500', marginBottom: 114, marginTop: 16, textAlign: 'center' },
+  participantShell: { backgroundColor: palette.bg, flex: 1 },
   page: { flex: 1, backgroundColor: palette.bg },
-  content: { alignSelf: 'center', gap: 16, maxWidth: 480, padding: 20, paddingBottom: 84, width: '100%' },
+  content: { alignSelf: 'center', gap: 16, maxWidth: 480, padding: 20, paddingBottom: 112, width: '100%' },
   header: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 16 },
   headerSubtitle: { alignSelf: 'flex-start', backgroundColor: palette.softGreen, borderRadius: 999, color: palette.success, fontFamily: fontSans, fontSize: 12, fontWeight: '800', marginTop: 6, overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 5 },
   headerBell: { alignItems: 'center', backgroundColor: '#dfeee2', borderRadius: 999, height: 42, justifyContent: 'center', width: 42 },
@@ -1130,7 +1133,7 @@ const styles = StyleSheet.create({
   courtPlayer: { backgroundColor: '#569665', borderRadius: 999, height: 22, position: 'absolute', top: 112, width: 22 },
   courtPlayerLeft: { left: '31%' },
   courtPlayerRight: { right: '31%' },
-  bottomNav: { alignItems: 'center', backgroundColor: palette.surface, borderColor: palette.line, borderRadius: 0, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: -20, paddingVertical: 14 },
+  bottomNav: { alignItems: 'center', backgroundColor: palette.surface, borderColor: palette.line, borderRadius: 0, borderWidth: 1, bottom: 0, flexDirection: 'row', justifyContent: 'space-around', left: 0, paddingVertical: 14, position: 'absolute', right: 0 },
   navButton: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
   navButtonActive: { backgroundColor: palette.softGreen },
   bottomNavItem: { color: palette.ink, fontFamily: fontSans, fontSize: 13, fontWeight: '800' },

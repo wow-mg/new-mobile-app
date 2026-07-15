@@ -1,5 +1,6 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { participantApplicationErrorCodeSchema } from '@template/contracts';
 import { router } from 'expo-router';
 import Home, {
@@ -215,9 +216,12 @@ describe('participant shell sandbox contract', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/payment');
   });
 
-  it('connects bottom tabs, my page shortcuts, and support copy', () => {
+  it('connects bottom tabs and keeps the bottom nav fixed while content scrolls', () => {
     startParticipantSession();
     render(React.createElement(TournamentsScreen));
+
+    const bottomNavStyle = StyleSheet.flatten(screen.getByTestId('bottom-nav').props.style);
+    expect(bottomNavStyle).toMatchObject({ position: 'absolute', bottom: 0, left: 0, right: 0 });
 
     fireEvent.press(screen.getByTestId('bottom-tab-games'));
     expect(mockPush).toHaveBeenLastCalledWith('/games');
