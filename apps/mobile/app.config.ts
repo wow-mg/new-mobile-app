@@ -26,6 +26,10 @@ function readConfigUrl(name: string, fallback: string): string {
   return value;
 }
 
+function hasConfigValue(name: string): boolean {
+  return Boolean(process.env[name]?.trim());
+}
+
 // Read process.env directly here — @expo/config's evalConfig uses sucrase + require-from-string
 // which cannot resolve TypeScript files via require('./env') in a monorepo with "type":"module"
 // at the workspace root. Runtime code (src/) should continue to import from ./env.ts.
@@ -41,5 +45,12 @@ export default ({ config }: ConfigContext): MobileExpoConfig => ({
   extra: {
     apiUrl: readConfigUrl('EXPO_PUBLIC_API_URL', 'https://example.invalid'),
     eas: { projectId: process.env.EAS_PROJECT_ID },
+    socialLogin: {
+      kakao: {
+        nativeAppKeyConfigured: hasConfigValue('SERVICE_NATIVE_APP_KEY'),
+        restApiKeyConfigured: hasConfigValue('SERVICE_REST_API_KEY'),
+        javascriptKeyConfigured: hasConfigValue('SERVICE_JAVASCRIPT_KEY'),
+      },
+    },
   },
 });

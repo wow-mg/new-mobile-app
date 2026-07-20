@@ -1,0 +1,121 @@
+{
+  "verdict": "GO",
+  "reviewer": "wm-implementation-reviewer",
+  "mode": "plan",
+  "scope": {
+    "baseline": "6090ec8da3e65b21d4a084be49f8c9363863c141",
+    "target": "docs/plans/work-units/9c447b1d-831d-4d68-9109-8e207e732260/04-mobile-app/implementation-plan.md",
+    "paths_reviewed": [
+      "AGENTS.md",
+      "PROJECT_ENVIRONMENT.md",
+      ".agents/skills/wm/SKILL.md",
+      ".agents/skills/mobile-app-dev-workflow/SKILL.md",
+      ".agents/skills/mobile-app-dev-workflow/references/sot.md",
+      ".codex/agents/wm-implementation-reviewer.toml",
+      ".codex/agents/wm-contract-reviewer.toml",
+      "apps/mobile/app.config.ts",
+      "apps/mobile/src/app/index.tsx",
+      "apps/mobile/__tests__/participant-shell.test.ts",
+      "apps/mobile/src/app/__tests__/home.test.tsx",
+      "apps/mobile/e2e-web/home.spec.ts",
+      "apps/mobile/package.json",
+      "package.json",
+      "turbo.json",
+      "docs/plans/work-units/9c447b1d-831d-4d68-9109-8e207e732260/04-mobile-app/implementation-plan.md"
+    ]
+  },
+  "findings": [],
+  "checks_reviewed": [
+    {
+      "command": "review: scope containment",
+      "status": "PASS",
+      "evidence": "Plan limits work to apps/mobile/app.config.ts, apps/mobile/src/auth/social-login-config.ts, apps/mobile/src/app/index.tsx, focused Jest tests, PROJECT_ENVIRONMENT.md, and the work-unit evidence directory at implementation-plan.md:17; repo policy keeps work inside this repository at AGENTS.md:40-42 and AGENTS.md:119-122."
+    },
+    {
+      "command": "review: TDD sequence",
+      "status": "PASS",
+      "evidence": "Plan identifies first tests before implementation at implementation-plan.md:15 and checkpoint 1 requires failing focused tests before implementation at implementation-plan.md:37; TDD is required by AGENTS.md:38 and .agents/skills/wm/SKILL.md:20."
+    },
+    {
+      "command": "review: secret safety",
+      "status": "PASS",
+      "evidence": "Plan allows only SERVICE_NATIVE_APP_KEY, SERVICE_REST_API_KEY, and SERVICE_JAVASCRIPT_KEY names and forbids values/DEFINE.env reads at implementation-plan.md:33; secret/customer hardcoding is forbidden by AGENTS.md:39, AGENTS.md:120, and PROJECT_ENVIRONMENT.md:131-146."
+    },
+    {
+      "command": "review: disabled provider behavior and selector preservation",
+      "status": "PASS",
+      "evidence": "Plan preserves kakao-login-button, apple-login-button, and social-login-pending-copy at implementation-plan.md:16 and preserves disabled controls/routes at implementation-plan.md:38; current component disables Kakao/Apple buttons at apps/mobile/src/app/index.tsx:482-484 and participant-shell asserts disabled behavior at apps/mobile/__tests__/participant-shell.test.ts:138-151."
+    },
+    {
+      "command": "review: API contract boundary",
+      "status": "PASS",
+      "evidence": "Plan states API contract/mock/fixture is not applicable and no API/auth/session changes are authorized at implementation-plan.md:13 and implementation-plan.md:24; packages/contracts is the API schema SoT under AGENTS.md:111 and PROJECT_ENVIRONMENT.md:194-203."
+    },
+    {
+      "command": "planned: focused mobile Jest tests first",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:15, implementation-plan.md:19, and implementation-plan.md:37."
+    },
+    {
+      "command": "planned: pnpm --filter mobile test",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19; mobile test script exists at apps/mobile/package.json:13."
+    },
+    {
+      "command": "planned: pnpm --filter mobile lint",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19; mobile lint script exists at apps/mobile/package.json:14."
+    },
+    {
+      "command": "planned: pnpm --filter mobile exec expo install --check",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19 and required for mobile environment/runtime changes by AGENTS.md:134."
+    },
+    {
+      "command": "planned: pnpm --filter mobile run doctor",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19; doctor script exists at apps/mobile/package.json:7."
+    },
+    {
+      "command": "planned: pnpm run test:runtime",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19 and required by AGENTS.md:132 and PROJECT_ENVIRONMENT.md:14-21."
+    },
+    {
+      "command": "planned: pnpm turbo run lint test",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19 and required by AGENTS.md:131 and PROJECT_ENVIRONMENT.md:16."
+    },
+    {
+      "command": "planned: git diff --check and final diff/status inspection",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:19 and implementation-plan.md:26; final diff/status reporting is required by .agents/skills/wm/SKILL.md:67 and .agents/skills/mobile-app-dev-workflow/SKILL.md:32."
+    },
+    {
+      "command": "planned: serial mobile-mcp visual QA or unavailable residual-risk record",
+      "status": "PASS",
+      "evidence": "Covered by implementation-plan.md:23; conditional mobile visual QA is required by AGENTS.md:135 and PROJECT_ENVIRONMENT.md:85-87."
+    },
+    {
+      "command": "planned: checkpoint and final reviewer evidence",
+      "status": "PASS",
+      "evidence": "Plan defines checkpoint boundaries at implementation-plan.md:35-39 and reviewer routing at implementation-plan.md:20-22 and implementation-plan.md:41-44; checkpoint/final review requirements are defined at .agents/skills/wm/SKILL.md:31-35 and .agents/skills/wm/SKILL.md:59."
+    },
+    {
+      "command": "planned: pnpm run test:local-harness",
+      "status": "NOT_APPLICABLE",
+      "evidence": "No planned edits under .agents, .codex, evals, runtime scripts, or other Codex runtime paths that trigger the conditional local harness gate described by AGENTS.md:115 and AGENTS.md:133."
+    },
+    {
+      "command": "actual command execution evidence",
+      "status": "NOT_APPLICABLE",
+      "evidence": "Pre-implementation plan review only; user explicitly stated no tests have run yet and requested planned commands be treated as plan coverage rather than missing final evidence."
+    }
+  ],
+  "residual_risks": [
+    "No final command evidence exists yet because this is the mandatory pre-implementation plan review.",
+    "The existing RN Web E2E flow clicks kakao-login-button and expects /tournaments at apps/mobile/e2e-web/home.spec.ts:19-20, while the component and plan preserve disabled provider buttons at apps/mobile/src/app/index.tsx:482-484 and implementation-plan.md:38; not a blocker for this plan gate, but should be considered if QA expands to L1 RN Web evidence.",
+    "Real Kakao/Apple OAuth remains blocked on secure credential delivery, provider/backend contracts, platform configuration, and explicit approval as stated at implementation-plan.md:24-25."
+  ],
+  "next_action": "proceed"
+}

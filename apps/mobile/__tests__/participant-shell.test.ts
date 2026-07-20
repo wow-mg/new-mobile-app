@@ -139,7 +139,7 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByTestId('apple-login-button')).toHaveTextContent('Apple로 계속하기');
     expect(screen.getByTestId('apple-login-button').props.accessibilityState).toMatchObject({ disabled: true });
-    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/소셜 로그인은 준비 중입니다/);
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/설정 키가 아직 전달되지 않았습니다/);
     expect(screen.getByTestId('login-consent-copy')).toHaveTextContent('처음이시면 자동으로 회원가입이 진행돼요');
     fireEvent.press(screen.getByTestId('signup-route-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/signup');

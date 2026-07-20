@@ -16,7 +16,9 @@ test('login-first screen exposes social login before DUPR gated participant flow
   await expect(page.getByTestId('application-cta')).toHaveCount(0);
   await expect(page.getByText(/Admin Web/i)).toHaveCount(0);
 
-  await page.getByTestId('kakao-login-button').click();
+  await expect(page.getByTestId('kakao-login-button')).toBeDisabled();
+  await expect(page.getByTestId('apple-login-button')).toBeDisabled();
+  await page.getByTestId('sandbox-login-button').click();
   await expect(page).toHaveURL(/\/tournaments$/);
   await expect(page.getByTestId('session-actor')).toContainText('actor_sandbox_social_001');
   await expect(page.getByTestId('mock-tournament-card')).toContainText('PickleHub Open');

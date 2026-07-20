@@ -33,7 +33,7 @@ describe('Home screen', () => {
     cleanup();
   });
 
-  it('renders the Korean login-first screen and routes social login to tournaments', () => {
+  it('renders the Korean login-first screen with unavailable providers disabled', () => {
     render(<Home />);
 
     expect(screen.getByTestId('login-artboard')).toBeTruthy();
@@ -41,13 +41,32 @@ describe('Home screen', () => {
     expect(screen.getByTestId('login-logo-text')).toHaveTextContent('Happickle');
     expect(screen.getByTestId('login-subtitle')).toHaveTextContent('대한피클볼협회 공식 대회 플랫폼');
     expect(screen.getByTestId('kakao-login-button')).toHaveTextContent('카카오로 계속하기');
+    expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByTestId('apple-login-button')).toHaveTextContent('Apple로 계속하기');
+    expect(screen.getByTestId('apple-login-button').props.accessibilityState).toMatchObject({ disabled: true });
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/설정 키가 아직 전달되지 않았습니다/);
     expect(screen.getByTestId('login-consent-copy')).toHaveTextContent('처음이시면 자동으로 회원가입이 진행돼요');
     expect(screen.queryByTestId('application-cta')).toBeNull();
     expect(screen.queryByText(/Admin Web/i)).toBeNull();
 
     fireEvent.press(screen.getByTestId('apple-login-button'));
-    expect(mockPush).toHaveBeenLastCalledWith('/tournaments');
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('reports detected Kakao config without enabling live OAuth', () => {
+    render(<Home socialLoginConfig={{
+      kakao: {
+        nativeAppKeyConfigured: true,
+        restApiKeyConfigured: true,
+        javascriptKeyConfigured: true,
+      },
+      appleConfigured: false,
+    }} />);
+
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/카카오 설정 키가 감지되었습니다/);
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/연동은 아직 준비 중입니다/);
+    expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: true });
+    expect(screen.getByTestId('apple-login-button').props.accessibilityState).toMatchObject({ disabled: true });
   });
 
   it('uses route targets from the tournament list page', () => {

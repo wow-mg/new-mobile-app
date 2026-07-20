@@ -143,6 +143,7 @@ Public JS runtime variables are parsed by `apps/mobile/env.ts`; app config varia
   - `EXPO_PUBLIC_ANDROID_PACKAGE`: required.
 - Non-public variables:
   - `EAS_PROJECT_ID`: optional UUID.
+  - `SERVICE_NATIVE_APP_KEY`, `SERVICE_REST_API_KEY`, and `SERVICE_JAVASCRIPT_KEY`: optional Kakao provider configuration inputs. `app.config.ts` exposes only key-presence booleans through `extra.socialLogin.kakao`; it never places these values in Expo extras. Presence does not mean live OAuth is ready.
 Do not hardcode customer app names, bundle IDs, API URLs, tokens, or credentials.
 
 ## EAS And Maestro

@@ -15,6 +15,7 @@ import {
   submitSandboxTournamentApplication,
 } from '../participant/mock-session';
 import { createParticipantApiClient, getParticipantApiConfigFromPublicEnv, type ParticipantApiClient } from '../participant/api-client';
+import { describeSocialLoginAvailability, getSocialLoginConfig, type SocialLoginConfig } from '../auth/social-login-config';
 
 const palette = {
   brand: '#558d60',
@@ -462,7 +463,7 @@ function BottomNav({ active }: { active: string }) {
   );
 }
 
-function LoginScreen({ participantApiClient }: { participantApiClient?: ParticipantApiClient }) {
+function LoginScreen({ participantApiClient, socialLoginConfig = getSocialLoginConfig() }: { participantApiClient?: ParticipantApiClient; socialLoginConfig?: SocialLoginConfig }) {
   const initialized = useRef(false);
   if (!initialized.current) {
     resetParticipantFlow(participantApiClient);
@@ -481,7 +482,7 @@ function LoginScreen({ participantApiClient }: { participantApiClient?: Particip
       <View testID="login-illustration" style={styles.illWrap}><Text style={styles.illIcon}>◌</Text><Text style={styles.illHandle}>╲</Text></View>
       <Pressable testID="kakao-login-button" accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={[styles.btn, styles.kakaoButton, styles.disabledSocialButton]}><Text style={styles.kakaoButtonText}>카카오로 계속하기</Text></Pressable>
       <Pressable testID="apple-login-button" accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={[styles.btn, styles.appleButton, styles.disabledSocialButton]}><Text style={styles.appleButtonText}>Apple로 계속하기</Text></Pressable>
-      <Text testID="social-login-pending-copy" style={styles.caption}>소셜 로그인은 준비 중입니다. 지금은 대회 둘러보기로 안전하게 미리 볼 수 있어요.</Text>
+      <Text testID="social-login-pending-copy" style={styles.caption}>{describeSocialLoginAvailability(socialLoginConfig)} 지금은 대회 둘러보기로 안전하게 미리 볼 수 있어요.</Text>
       <Pressable testID="sandbox-login-button" accessibilityRole="button" onPress={startSandboxPreview} style={[styles.btn, styles.previewButton]}><Text style={styles.previewButtonText}>대회 둘러보기</Text></Pressable>
       <Text testID="login-consent-copy" style={styles.hint}>처음이시면 자동으로 회원가입이 진행돼요</Text>
       <Pressable testID="signup-route-button" accessibilityRole="button" onPress={() => router.push('/signup')}><Text style={styles.linkText}>회원가입 폼 미리보기</Text></Pressable>
@@ -507,10 +508,11 @@ function ParticipantRouteScaffold({ active, children }: { active: string; childr
 
 export type HomeProps = {
   participantApiClient?: ParticipantApiClient;
+  socialLoginConfig?: SocialLoginConfig;
 };
 
-export default function Home({ participantApiClient }: HomeProps = {}) {
-  return <LoginScreen participantApiClient={participantApiClient} />;
+export default function Home({ participantApiClient, socialLoginConfig }: HomeProps = {}) {
+  return <LoginScreen participantApiClient={participantApiClient} socialLoginConfig={socialLoginConfig} />;
 }
 
 export function SignupScreen() {

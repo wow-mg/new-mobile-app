@@ -10,6 +10,9 @@ const configEnvKeys = [
   'EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER',
   'EXPO_PUBLIC_ANDROID_PACKAGE',
   'EAS_BUILD',
+  'SERVICE_NATIVE_APP_KEY',
+  'SERVICE_REST_API_KEY',
+  'SERVICE_JAVASCRIPT_KEY',
 ];
 
 function setRequiredProductionIdentity() {
@@ -68,5 +71,36 @@ describe('Expo app config', () => {
     expect(resolveConfig().extra).toMatchObject({
       apiUrl: 'https://api.example.invalid',
     });
+  });
+
+  it('exposes only Kakao key-presence booleans when provider config is absent', () => {
+    expect(resolveConfig().extra).toMatchObject({
+      socialLogin: {
+        kakao: {
+          nativeAppKeyConfigured: false,
+          restApiKeyConfigured: false,
+          javascriptKeyConfigured: false,
+        },
+      },
+    });
+  });
+
+  it('exposes only Kakao key-presence booleans when provider config is supplied', () => {
+    process.env.SERVICE_NATIVE_APP_KEY = 'placeholder-native-key';
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    process.env.SERVICE_JAVASCRIPT_KEY = 'placeholder-javascript-key';
+
+    const config = resolveConfig();
+
+    expect(config.extra).toMatchObject({
+      socialLogin: {
+        kakao: {
+          nativeAppKeyConfigured: true,
+          restApiKeyConfigured: true,
+          javascriptKeyConfigured: true,
+        },
+      },
+    });
+    expect(JSON.stringify(config.extra)).not.toContain('placeholder-');
   });
 });
