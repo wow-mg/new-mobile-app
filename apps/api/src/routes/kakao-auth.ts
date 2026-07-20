@@ -75,6 +75,7 @@ async function exchangeKakaoCode(code: string, redirectUri: string) {
     redirect_uri: redirectUri,
     code,
   });
+  if (Env.KAKAO_CLIENT_SECRET) form.set('client_secret', Env.KAKAO_CLIENT_SECRET);
 
   const response = await fetch(KAKAO_TOKEN_URL, {
     method: 'POST',

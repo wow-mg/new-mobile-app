@@ -7,6 +7,7 @@ const schema = z.object({
   PARTICIPANT_PREVIEW_BEARER_TOKEN: z.string().min(1).optional(),
   PUBLIC_AUTH_BASE_URL: z.url().optional(),
   SERVICE_REST_API_KEY: z.string().min(1).optional(),
+  KAKAO_CLIENT_SECRET: z.string().min(1).optional(),
 });
 
 export const Env = schema.parse({
@@ -16,4 +17,5 @@ export const Env = schema.parse({
   PARTICIPANT_PREVIEW_BEARER_TOKEN: process.env.PARTICIPANT_PREVIEW_BEARER_TOKEN,
   PUBLIC_AUTH_BASE_URL: process.env.PUBLIC_AUTH_BASE_URL,
   SERVICE_REST_API_KEY: process.env.SERVICE_REST_API_KEY,
+  KAKAO_CLIENT_SECRET: process.env.KAKAO_CLIENT_SECRET,
 });

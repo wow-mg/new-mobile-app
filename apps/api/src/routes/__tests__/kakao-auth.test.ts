@@ -15,7 +15,7 @@ async function loadApp() {
 }
 
 function mockKakaoFetch(profile: { id?: string | number; email?: string; phone?: string; nickname?: string }, tokenStatus = 200) {
-  const fetchMock = vi.fn(async (url: string | URL) => {
+  const fetchMock = vi.fn(async (url: string | URL, _init?: RequestInit) => {
     const href = String(url);
     if (href === 'https://kauth.kakao.com/oauth/token') {
       return new Response(JSON.stringify(tokenStatus === 200 ? { access_token: 'mock-access-token' } : { error: 'invalid_grant' }), {
@@ -48,6 +48,7 @@ describe('Kakao OAuth dev initiation route', () => {
     process.env.DATABASE_URL = 'postgres://user:pass@example.invalid:5432/db';
     process.env.API_BEARER_TOKEN = 'test';
     delete process.env.SERVICE_REST_API_KEY;
+    delete process.env.KAKAO_CLIENT_SECRET;
     delete process.env.PUBLIC_AUTH_BASE_URL;
   });
 
@@ -108,6 +109,41 @@ describe('Kakao OAuth dev initiation route', () => {
       session: { kind: 'dev-session', accessToken: 'dev-session:dev-member-12345', memberId: 'dev-member-12345' },
     });
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('omits client_secret from the Kakao token exchange when the optional server secret is unset', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    process.env.PUBLIC_AUTH_BASE_URL = 'https://api.example.invalid';
+    const fetchMock = mockKakaoFetch({ id: 'without-secret', email: 'without-secret@example.invalid' });
+
+    const { app } = await loadApp();
+    const res = await app.request('/auth/kakao/callback?code=mock-code');
+
+    expect(res.status).toBe(201);
+    const tokenRequest = fetchMock.mock.calls.find(([url]) => String(url) === 'https://kauth.kakao.com/oauth/token');
+    expect(tokenRequest).toBeDefined();
+    const tokenForm = new URLSearchParams(String(tokenRequest?.[1]?.body));
+    expect(tokenForm.get('client_id')).toBe('placeholder-rest-key');
+    expect(tokenForm.get('code')).toBe('mock-code');
+    expect(tokenForm.has('client_secret')).toBe(false);
+  });
+
+  it('includes client_secret in the Kakao token exchange only when configured', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    process.env.KAKAO_CLIENT_SECRET = 'test-client-secret-fixture';
+    process.env.PUBLIC_AUTH_BASE_URL = 'https://api.example.invalid';
+    const fetchMock = mockKakaoFetch({ id: 'with-secret', email: 'with-secret@example.invalid' });
+
+    const { app } = await loadApp();
+    const res = await app.request('/auth/kakao/callback?code=mock-code');
+
+    expect(res.status).toBe(201);
+    const tokenRequest = fetchMock.mock.calls.find(([url]) => String(url) === 'https://kauth.kakao.com/oauth/token');
+    expect(tokenRequest).toBeDefined();
+    const tokenForm = new URLSearchParams(String(tokenRequest?.[1]?.body));
+    expect(tokenForm.get('client_id')).toBe('placeholder-rest-key');
+    expect(tokenForm.get('code')).toBe('mock-code');
+    expect(tokenForm.get('client_secret')).toBe('test-client-secret-fixture');
   });
 
   it('logs in an existing dev member on a repeated Kakao callback', async () => {
