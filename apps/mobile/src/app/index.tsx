@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { router } from 'expo-router';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { ParticipantGame, ParticipantNotification, PaymentRecord, SupportCenterResponse, SupportInquiry, Tournament, TournamentDivision } from '@template/contracts';
 import {
   type MockTournamentApplication,
@@ -15,7 +15,7 @@ import {
   submitSandboxTournamentApplication,
 } from '../participant/mock-session';
 import { createParticipantApiClient, getParticipantApiConfigFromPublicEnv, type ParticipantApiClient } from '../participant/api-client';
-import { describeSocialLoginAvailability, getSocialLoginConfig, type SocialLoginConfig } from '../auth/social-login-config';
+import { describeKakaoCallbackResult, describeSocialLoginAvailability, getSocialLoginConfig, type KakaoCallbackResult, type SocialLoginConfig } from '../auth/social-login-config';
 
 const palette = {
   brand: '#558d60',
@@ -42,6 +42,7 @@ const defaultTournamentId = sandboxParticipantSession.featuredTournament.tournam
 
 type ParticipantStoreState = {
   socialSessionStarted: boolean;
+  persistedKakaoDevSession: KakaoDevSessionSnapshot | null;
   profile: ParticipantProfile;
   duprInput: string;
   application: MockTournamentApplication | null;
@@ -57,6 +58,14 @@ type ParticipantStoreState = {
   supportInquirySubmission: 'idle' | 'submitting' | 'submitted' | 'fallback';
 };
 
+type KakaoDevSessionSnapshot = {
+  memberId?: string;
+  displayName?: string;
+  action: 'login' | 'signup';
+};
+
+let persistedKakaoDevSession: KakaoDevSessionSnapshot | null = null;
+
 const fallbackSupportCenter: SupportCenterResponse = {
   policyCopy: describeSupportRefundPolicyCopy({ refundPolicy: 'participantSelfCancelDisabled', supportChannel: 'oneToOneInquiry' }),
   contactEmail: 'support@happickle.kr',
@@ -69,7 +78,8 @@ const fallbackNotifications: ParticipantNotification[] = [
 ];
 
 const initialParticipantState = (participantApi: ParticipantApiClient): ParticipantStoreState => ({
-  socialSessionStarted: false,
+  socialSessionStarted: Boolean(persistedKakaoDevSession),
+  persistedKakaoDevSession,
   profile: sandboxParticipantSession.profile,
   duprInput: sandboxParticipantSession.profile.duprId ?? '',
   application: null,
@@ -111,7 +121,7 @@ function subscribeParticipantState(listener: () => void) {
   return () => participantListeners.delete(listener);
 }
 
-function getParticipantSnapshot() {
+export function getParticipantSnapshot() {
   return participantState;
 }
 
@@ -119,6 +129,23 @@ export function resetParticipantFlow(participantApiClient?: ParticipantApiClient
   participantApi = participantApiClient ?? defaultParticipantApi;
   participantState = initialParticipantState(participantApi);
   emitParticipantState();
+}
+
+export function clearKakaoDevSession() {
+  persistedKakaoDevSession = null;
+  patchParticipantState({ persistedKakaoDevSession: null, socialSessionStarted: false });
+}
+
+function isKakaoDevSessionSuccess(result: KakaoCallbackResult | null | undefined): result is Extract<KakaoCallbackResult, { action: 'login' | 'signup' }> {
+  return Boolean(result && 'action' in result && (result.action === 'login' || result.action === 'signup') && result.session?.kind === 'dev-session');
+}
+
+function primeKakaoDevSession(result: Extract<KakaoCallbackResult, { action: 'login' | 'signup' }>) {
+  persistedKakaoDevSession = {
+    action: result.action,
+    memberId: result.session?.memberId,
+    displayName: result.member?.displayName,
+  };
 }
 
 function useParticipantFlow() {
@@ -463,9 +490,10 @@ function BottomNav({ active }: { active: string }) {
   );
 }
 
-function LoginScreen({ participantApiClient, socialLoginConfig = getSocialLoginConfig() }: { participantApiClient?: ParticipantApiClient; socialLoginConfig?: SocialLoginConfig }) {
+function LoginScreen({ participantApiClient, socialLoginConfig = getSocialLoginConfig(), kakaoCallbackResult }: { participantApiClient?: ParticipantApiClient; socialLoginConfig?: SocialLoginConfig; kakaoCallbackResult?: KakaoCallbackResult | null }) {
   const initialized = useRef(false);
   if (!initialized.current) {
+    if (isKakaoDevSessionSuccess(kakaoCallbackResult)) primeKakaoDevSession(kakaoCallbackResult);
     resetParticipantFlow(participantApiClient);
     initialized.current = true;
   }
@@ -474,15 +502,26 @@ function LoginScreen({ participantApiClient, socialLoginConfig = getSocialLoginC
     startParticipantSession();
     router.push('/tournaments');
   };
+  const kakaoAuthStartUrl = socialLoginConfig.kakao.authStartUrl;
+  const kakaoOauthCheckable = Boolean(kakaoAuthStartUrl);
+  const kakaoCallbackCopy = describeKakaoCallbackResult(kakaoCallbackResult);
+
+  const startKakaoOAuth = () => {
+    if (!kakaoAuthStartUrl) return;
+    Linking.openURL(kakaoAuthStartUrl);
+  };
 
   return (
     <View style={styles.loginScreen}><View testID="login-artboard" style={styles.phoneFrame}><View style={styles.loginMain}>
       <Logo /><Text testID="login-logo-text" style={styles.hiddenParityText}>Happickle</Text>
       <Text testID="login-subtitle" style={styles.tagline}>대한피클볼협회 공식 대회 플랫폼</Text>
       <View testID="login-illustration" style={styles.illWrap}><Text style={styles.illIcon}>◌</Text><Text style={styles.illHandle}>╲</Text></View>
-      <Pressable testID="kakao-login-button" accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={[styles.btn, styles.kakaoButton, styles.disabledSocialButton]}><Text style={styles.kakaoButtonText}>카카오로 계속하기</Text></Pressable>
+      <Pressable testID="kakao-login-button" accessibilityRole="button" accessibilityState={{ disabled: !kakaoOauthCheckable }} disabled={!kakaoOauthCheckable} onPress={startKakaoOAuth} style={[styles.btn, styles.kakaoButton, !kakaoOauthCheckable && styles.disabledSocialButton]}><Text style={styles.kakaoButtonText}>카카오로 계속하기</Text></Pressable>
       <Pressable testID="apple-login-button" accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={[styles.btn, styles.appleButton, styles.disabledSocialButton]}><Text style={styles.appleButtonText}>Apple로 계속하기</Text></Pressable>
       <Text testID="social-login-pending-copy" style={styles.caption}>{describeSocialLoginAvailability(socialLoginConfig)} 지금은 대회 둘러보기로 안전하게 미리 볼 수 있어요.</Text>
+      {kakaoCallbackCopy ? <Text testID="kakao-callback-result-copy" style={[styles.caption, styles.kakaoCallbackCopy]}>{kakaoCallbackCopy}</Text> : null}
+      {participantState.persistedKakaoDevSession ? <Text testID="kakao-dev-session-persistence-copy" style={[styles.caption, styles.successCopy]}>카카오 dev 세션이 이 기기에서 보존되어 앱 재시작 후에도 둘러보기를 이어갈 수 있어요.</Text> : null}
+      {kakaoCallbackResult && 'action' in kakaoCallbackResult && kakaoCallbackResult.action === 'additional_info_required' ? <ActionButton testID="kakao-additional-info-button" label="추가 정보 입력하기" secondary onPress={() => router.push(kakaoCallbackResult.next ?? '/auth/additional-info')} /> : null}
       <Pressable testID="sandbox-login-button" accessibilityRole="button" onPress={startSandboxPreview} style={[styles.btn, styles.previewButton]}><Text style={styles.previewButtonText}>대회 둘러보기</Text></Pressable>
       <Text testID="login-consent-copy" style={styles.hint}>처음이시면 자동으로 회원가입이 진행돼요</Text>
       <Pressable testID="signup-route-button" accessibilityRole="button" onPress={() => router.push('/signup')}><Text style={styles.linkText}>회원가입 폼 미리보기</Text></Pressable>
@@ -509,10 +548,32 @@ function ParticipantRouteScaffold({ active, children }: { active: string; childr
 export type HomeProps = {
   participantApiClient?: ParticipantApiClient;
   socialLoginConfig?: SocialLoginConfig;
+  kakaoCallbackResult?: KakaoCallbackResult | null;
 };
 
-export default function Home({ participantApiClient, socialLoginConfig }: HomeProps = {}) {
-  return <LoginScreen participantApiClient={participantApiClient} socialLoginConfig={socialLoginConfig} />;
+export default function Home({ participantApiClient, socialLoginConfig, kakaoCallbackResult }: HomeProps = {}) {
+  return <LoginScreen participantApiClient={participantApiClient} socialLoginConfig={socialLoginConfig} kakaoCallbackResult={kakaoCallbackResult} />;
+}
+
+export function KakaoAdditionalInfoScreen() {
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const canContinue = email.trim().includes('@') && name.trim().length > 0 && phone.trim().length > 0;
+
+  return (
+    <ScrollView testID="kakao-additional-info-screen" style={styles.page} contentContainerStyle={styles.content}>
+      <PageHero testID="kakao-additional-info-hero" eyebrow="카카오 가입" title="추가 정보를 확인해 주세요" caption="카카오 계정에서 전달되지 않은 필수 정보만 로컬 dev 화면에서 보완합니다." />
+      <InfoCard testID="kakao-additional-info-fields" title="필수 정보">
+        <TextInput testID="kakao-additional-email-input" accessibilityLabel="카카오 추가 이메일" autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} placeholder="이메일" placeholderTextColor={palette.muted} value={email} style={styles.input} />
+        <TextInput testID="kakao-additional-name-input" accessibilityLabel="카카오 추가 이름" onChangeText={setName} placeholder="이름" placeholderTextColor={palette.muted} value={name} style={styles.input} />
+        <TextInput testID="kakao-additional-phone-input" accessibilityLabel="카카오 추가 연락처" keyboardType="phone-pad" onChangeText={setPhone} placeholder="연락처 (010-0000-0000)" placeholderTextColor={palette.muted} value={phone} style={styles.input} />
+      </InfoCard>
+      <InfoCard testID="kakao-additional-info-notice" title="로컬 dev 안내"><Text style={styles.caption}>입력값은 현재 화면 상태로만 검증하며, Kakao REST/API 키나 토큰은 모바일에 저장하지 않습니다.</Text></InfoCard>
+      <ActionButton testID="kakao-additional-info-submit-button" label="카카오 가입 계속하기" onPress={() => router.push('/signup-complete')} disabled={!canContinue} />
+      <ActionButton testID="kakao-additional-info-back-button" label="로그인으로 돌아가기" secondary onPress={() => router.push('/')} />
+    </ScrollView>
+  );
 }
 
 export function SignupScreen() {
@@ -1063,6 +1124,8 @@ const styles = StyleSheet.create({
   previewButton: { backgroundColor: palette.brand, marginTop: 12 },
   previewButtonText: { color: '#ffffff', fontFamily: fontSans, fontSize: 15, fontWeight: '800' },
   hint: { color: palette.muted, fontFamily: fontSans, fontSize: 12, fontWeight: '500', marginBottom: 80, marginTop: 16, textAlign: 'center' },
+  kakaoCallbackCopy: { color: palette.warning, fontFamily: fontSans, fontSize: 12, fontWeight: '700', marginTop: 8, maxWidth: 400, textAlign: 'center' },
+  successCopy: { color: palette.success },
   participantShell: { backgroundColor: palette.bg, flex: 1 },
   page: { flex: 1, backgroundColor: palette.bg },
   content: { alignSelf: 'center', gap: 16, maxWidth: 480, padding: 20, paddingBottom: 112, width: '100%' },

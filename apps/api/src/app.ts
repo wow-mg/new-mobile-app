@@ -3,6 +3,7 @@ import { bearerAuth } from 'hono/bearer-auth';
 import { cors } from 'hono/cors';
 import { healthRoute } from './routes/health.js';
 import { counterEventsRoute } from './routes/counter-events.js';
+import { kakaoAuthRoute } from './routes/kakao-auth.js';
 import {
   participantProfileRoute,
   supportRoute,
@@ -27,6 +28,7 @@ const allowedCorsOrigins = [
 
 export const app = new Hono()
   .route('/', healthRoute)                          // /livez, /readyz — 무인증
+  .route('/auth', kakaoAuthRoute)                   // /auth/kakao — dev OAuth initiation, no client secret exposure
   .use(
     '/api/*',
     cors({

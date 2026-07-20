@@ -98,6 +98,7 @@ describe('Expo app config', () => {
           nativeAppKeyConfigured: true,
           restApiKeyConfigured: true,
           javascriptKeyConfigured: true,
+          authStartUrl: 'https://example.invalid/auth/kakao',
         },
       },
     });

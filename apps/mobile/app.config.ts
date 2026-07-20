@@ -30,10 +30,18 @@ function hasConfigValue(name: string): boolean {
   return Boolean(process.env[name]?.trim());
 }
 
+function joinUrl(baseUrl: string, path: string): string {
+  return `${baseUrl.replace(/\/$/, '')}${path}`;
+}
+
 // Read process.env directly here — @expo/config's evalConfig uses sucrase + require-from-string
 // which cannot resolve TypeScript files via require('./env') in a monorepo with "type":"module"
 // at the workspace root. Runtime code (src/) should continue to import from ./env.ts.
-export default ({ config }: ConfigContext): MobileExpoConfig => ({
+export default ({ config }: ConfigContext): MobileExpoConfig => {
+  const apiUrl = readConfigUrl('EXPO_PUBLIC_API_URL', 'https://example.invalid');
+  const kakaoRestConfigured = hasConfigValue('SERVICE_REST_API_KEY');
+
+  return ({
   ...config,
   name: readConfigValue('EXPO_PUBLIC_APP_DISPLAY_NAME', 'Happickle'),
   slug: readConfigValue('EXPO_PUBLIC_APP_SLUG', 'happickle-mobile'),
@@ -43,14 +51,16 @@ export default ({ config }: ConfigContext): MobileExpoConfig => ({
   android: { package: readConfigValue('EXPO_PUBLIC_ANDROID_PACKAGE', 'com.template.mobile') },
   plugins: ['expo-router'],
   extra: {
-    apiUrl: readConfigUrl('EXPO_PUBLIC_API_URL', 'https://example.invalid'),
+    apiUrl,
     eas: { projectId: process.env.EAS_PROJECT_ID },
     socialLogin: {
       kakao: {
         nativeAppKeyConfigured: hasConfigValue('SERVICE_NATIVE_APP_KEY'),
-        restApiKeyConfigured: hasConfigValue('SERVICE_REST_API_KEY'),
+        restApiKeyConfigured: kakaoRestConfigured,
         javascriptKeyConfigured: hasConfigValue('SERVICE_JAVASCRIPT_KEY'),
+        authStartUrl: kakaoRestConfigured ? joinUrl(apiUrl, '/auth/kakao') : undefined,
       },
     },
   },
-});
+  });
+};

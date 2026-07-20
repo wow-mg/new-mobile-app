@@ -1,13 +1,17 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { Linking } from 'react-native';
 import Home, {
+  clearKakaoDevSession,
   DuprProfileScreen,
+  KakaoAdditionalInfoScreen,
   MyPageScreen,
   NotificationsScreen,
   SupportScreen,
   TournamentApplicationScreen,
   TournamentDetailScreen,
   TournamentsScreen,
+  getParticipantSnapshot,
   resetParticipantFlow,
   saveParticipantDupr,
   startParticipantSession,
@@ -22,11 +26,14 @@ jest.mock('expo-router', () => ({
 }));
 
 const mockPush = router.push as jest.Mock;
+const openUrlSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
 
 describe('Home screen', () => {
   beforeEach(() => {
     mockPush.mockClear();
+    openUrlSpy.mockClear();
     resetParticipantFlow();
+    clearKakaoDevSession();
   });
 
   afterEach(() => {
@@ -53,7 +60,7 @@ describe('Home screen', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('reports detected Kakao config without enabling live OAuth', () => {
+  it('reports detected Kakao config without enabling OAuth when no server start URL exists', () => {
     render(<Home socialLoginConfig={{
       kakao: {
         nativeAppKeyConfigured: true,
@@ -63,10 +70,88 @@ describe('Home screen', () => {
       appleConfigured: false,
     }} />);
 
-    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/카카오 설정 키가 감지되었습니다/);
-    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/연동은 아직 준비 중입니다/);
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/서버 OAuth 시작 경로가 아직 없습니다/);
     expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByTestId('apple-login-button').props.accessibilityState).toMatchObject({ disabled: true });
+  });
+
+  it('enables dev Kakao OAuth when the server initiation URL is configured', () => {
+    render(<Home socialLoginConfig={{
+      kakao: {
+        nativeAppKeyConfigured: true,
+        restApiKeyConfigured: true,
+        javascriptKeyConfigured: true,
+        authStartUrl: 'https://api.example.invalid/auth/kakao',
+      },
+      appleConfigured: false,
+    }} />);
+
+    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/OAuth 확인 경로가 준비되었습니다/);
+    expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: false });
+
+    fireEvent.press(screen.getByTestId('kakao-login-button'));
+    expect(openUrlSpy).toHaveBeenCalledWith('https://api.example.invalid/auth/kakao');
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('shows additional-info guidance from a Kakao callback response without starting a session', () => {
+    render(<Home kakaoCallbackResult={{ action: 'additional_info_required', reason: 'EMAIL_MISSING', next: '/auth/additional-info' }} />);
+
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/필수 정보가 부족/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/추가 정보/);
+    expect(screen.queryByTestId('application-cta')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('kakao-additional-info-button'));
+    expect(mockPush).toHaveBeenCalledWith('/auth/additional-info');
+  });
+
+  it('validates the Kakao additional-info route before continuing locally', () => {
+    render(<KakaoAdditionalInfoScreen />);
+
+    expect(screen.getByTestId('kakao-additional-info-screen')).toBeTruthy();
+    expect(screen.getByTestId('kakao-additional-info-submit-button').props.accessibilityState).toMatchObject({ disabled: true });
+
+    fireEvent.changeText(screen.getByTestId('kakao-additional-email-input'), 'member@example.invalid');
+    fireEvent.changeText(screen.getByTestId('kakao-additional-name-input'), '김카카오');
+    fireEvent.changeText(screen.getByTestId('kakao-additional-phone-input'), '010-1234-5678');
+
+    expect(screen.getByTestId('kakao-additional-info-submit-button').props.accessibilityState).toMatchObject({ disabled: false });
+    fireEvent.press(screen.getByTestId('kakao-additional-info-submit-button'));
+    expect(mockPush).toHaveBeenCalledWith('/signup-complete');
+  });
+
+  it('shows duplicate-account Kakao callback guidance without exposing provider details', () => {
+    render(<Home kakaoCallbackResult={{ action: 'blocked', reason: 'DUPLICATE_EMAIL', message: '이미 가입된 이메일입니다.' }} />);
+
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/이미 가입된 이메일/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/기존 계정/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).not.toHaveTextContent(/access_token|client_id|REST/i);
+  });
+
+  it('shows duplicate-phone Kakao guidance with Korean recovery copy', () => {
+    render(<Home kakaoCallbackResult={{ action: 'blocked', reason: 'DUPLICATE_PHONE', message: '이미 가입된 연락처입니다.' }} />);
+
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/이미 가입된 연락처/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/1:1 문의/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).not.toHaveTextContent(/access_token|client_id|REST/i);
+  });
+
+  it('shows withdrawn-member Kakao guidance without starting a session', () => {
+    render(<Home kakaoCallbackResult={{ action: 'blocked', reason: 'WITHDRAWN_MEMBER', message: '탈퇴 처리된 계정은 재가입 정책 확인 후 이용할 수 있습니다.' }} />);
+
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/탈퇴 처리된 계정/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/재가입 가능 여부/);
+    expect(screen.queryByTestId('application-cta')).toBeNull();
+  });
+
+  it('persists a sanitized Kakao dev-session callback across a local app restart', () => {
+    render(<Home kakaoCallbackResult={{ action: 'signup', member: { displayName: '김카카오' }, session: { kind: 'dev-session', memberId: 'member_local_001' } }} />);
+
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/로컬 dev 세션/);
+    expect(screen.getByTestId('kakao-dev-session-persistence-copy')).toHaveTextContent(/앱 재시작 후에도/);
+
+    resetParticipantFlow();
+    expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: true, persistedKakaoDevSession: { action: 'signup', memberId: 'member_local_001', displayName: '김카카오' } });
   });
 
   it('uses route targets from the tournament list page', () => {
