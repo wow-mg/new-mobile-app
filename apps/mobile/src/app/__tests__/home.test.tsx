@@ -7,7 +7,9 @@ import Home, {
   KakaoAdditionalInfoScreen,
   MyPageScreen,
   NotificationsScreen,
+  PrivacyPolicyScreen,
   SupportScreen,
+  TermsScreen,
   TournamentApplicationScreen,
   TournamentDetailScreen,
   TournamentsScreen,
@@ -19,11 +21,16 @@ import Home, {
 import { createParticipantApiClient } from '../../participant/api-client';
 import { sandboxParticipantSession } from '../../participant/mock-session';
 
+const mockLocalSearchParams = jest.fn(() => ({}));
+
 jest.mock('expo-router', () => ({
+  useLocalSearchParams: () => mockLocalSearchParams(),
   router: {
     push: jest.fn(),
   },
 }));
+
+jest.mock('expo-linking', () => ({ createURL: jest.fn(() => 'happickle:///') }));
 
 const mockPush = router.push as jest.Mock;
 const openUrlSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
@@ -32,6 +39,7 @@ describe('Home screen', () => {
   beforeEach(() => {
     mockPush.mockClear();
     openUrlSpy.mockClear();
+    mockLocalSearchParams.mockReturnValue({});
     resetParticipantFlow();
     clearKakaoDevSession();
   });
@@ -90,23 +98,45 @@ describe('Home screen', () => {
     expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: false });
 
     fireEvent.press(screen.getByTestId('kakao-login-button'));
-    expect(openUrlSpy).toHaveBeenCalledWith('https://api.example.invalid/auth/kakao');
+    expect(openUrlSpy).toHaveBeenCalledWith('https://api.example.invalid/auth/kakao?returnTo=happickle%3A%2F%2F%2F');
     expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('shows additional-info guidance from a Kakao callback response without starting a session', () => {
-    render(<Home kakaoCallbackResult={{ action: 'additional_info_required', reason: 'EMAIL_MISSING', next: '/auth/additional-info' }} />);
+    render(<Home kakaoCallbackResult={{ action: 'additional_info_required', reason: 'EMAIL_MISSING', kakaoUserId: '777', continuationToken: '00000000-0000-4000-8000-000000000000', next: '/auth/additional-info' }} />);
 
     expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/필수 정보가 부족/);
     expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/추가 정보/);
     expect(screen.queryByTestId('application-cta')).toBeNull();
 
     fireEvent.press(screen.getByTestId('kakao-additional-info-button'));
-    expect(mockPush).toHaveBeenCalledWith('/auth/additional-info');
+    expect(mockPush).toHaveBeenCalledWith('/auth/additional-info?continuationToken=00000000-0000-4000-8000-000000000000');
   });
 
-  it('validates the Kakao additional-info route before continuing locally', () => {
-    render(<KakaoAdditionalInfoScreen />);
+  it('reads the state-bound Kakao callback from real route parameters', () => {
+    mockLocalSearchParams.mockReturnValue({ action: 'additional_info_required', reason: 'EMAIL_MISSING', kakaoUserId: '777', continuationToken: '00000000-0000-4000-8000-000000000000', next: '/auth/additional-info' });
+    render(<Home />);
+
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/추가 정보/);
+    fireEvent.press(screen.getByTestId('kakao-additional-info-button'));
+    expect(mockPush).toHaveBeenCalledWith('/auth/additional-info?continuationToken=00000000-0000-4000-8000-000000000000');
+  });
+
+  it('does not trust forged login session values from deep-link parameters', () => {
+    mockLocalSearchParams.mockReturnValue({ action: 'login', sessionKind: 'dev-session', memberId: 'forged-member' });
+    render(<Home />);
+
+    expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: false, persistedKakaoDevSession: null });
+    expect(screen.queryByTestId('kakao-dev-session-persistence-copy')).toBeNull();
+  });
+
+  it('submits Kakao additional info and starts the returned dev session', async () => {
+    const completeAdditionalInfo = jest.fn().mockResolvedValue({
+      action: 'signup',
+      member: { displayName: '김카카오' },
+      session: { kind: 'dev-session', memberId: 'dev-member-777' },
+    });
+    render(<KakaoAdditionalInfoScreen continuationToken="00000000-0000-4000-8000-000000000000" completeAdditionalInfo={completeAdditionalInfo} />);
 
     expect(screen.getByTestId('kakao-additional-info-screen')).toBeTruthy();
     expect(screen.getByTestId('kakao-additional-info-submit-button').props.accessibilityState).toMatchObject({ disabled: true });
@@ -117,7 +147,21 @@ describe('Home screen', () => {
 
     expect(screen.getByTestId('kakao-additional-info-submit-button').props.accessibilityState).toMatchObject({ disabled: false });
     fireEvent.press(screen.getByTestId('kakao-additional-info-submit-button'));
+    await waitFor(() => expect(completeAdditionalInfo).toHaveBeenCalledWith({ continuationToken: '00000000-0000-4000-8000-000000000000', email: 'member@example.invalid', displayName: '김카카오', phone: '010-1234-5678' }));
+    await waitFor(() => expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: true, persistedKakaoDevSession: { action: 'signup', memberId: 'dev-member-777', displayName: '김카카오' } }));
     expect(mockPush).toHaveBeenCalledWith('/signup-complete');
+  });
+
+  it('keeps the Kakao additional-info form on screen when completion fails', async () => {
+    const completeAdditionalInfo = jest.fn().mockRejectedValue(new Error('DUPLICATE_EMAIL'));
+    render(<KakaoAdditionalInfoScreen continuationToken="00000000-0000-4000-8000-000000000000" completeAdditionalInfo={completeAdditionalInfo} />);
+
+    fireEvent.changeText(screen.getByTestId('kakao-additional-email-input'), 'member@example.invalid');
+    fireEvent.changeText(screen.getByTestId('kakao-additional-name-input'), '김카카오');
+    fireEvent.press(screen.getByTestId('kakao-additional-info-submit-button'));
+
+    await waitFor(() => expect(screen.getByTestId('kakao-additional-info-status')).toHaveTextContent(/이미 가입된 이메일/));
+    expect(mockPush).not.toHaveBeenCalledWith('/signup-complete');
   });
 
   it('shows duplicate-account Kakao callback guidance without exposing provider details', () => {
@@ -238,11 +282,37 @@ describe('Home screen', () => {
     render(<MyPageScreen />);
 
     expect(screen.getByTestId('mypage-layout-hero')).toHaveTextContent(/관리하세요/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/사업자등록번호: 604-88-01570/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/대표번호: 02-570-1900/);
+
+    fireEvent.press(screen.getByTestId('mypage-privacy-link'));
+    expect(mockPush).toHaveBeenLastCalledWith('/privacy-policy');
+
+    fireEvent.press(screen.getByTestId('mypage-terms-link'));
+    expect(mockPush).toHaveBeenLastCalledWith('/terms');
+
     fireEvent.press(screen.getByTestId('mypage-support-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/support');
 
     fireEvent.press(screen.getByTestId('mypage-dupr-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/dupr-profile');
+  });
+
+  it('renders the privacy policy publicly without starting a participant session', () => {
+    render(<PrivacyPolicyScreen />);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보처리방침 담당자: 홍승표 부장님/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보 보호법/);
+    expect(screen.queryByTestId('login-artboard')).toBeNull();
+  });
+
+  it('renders the terms page publicly without starting a participant session', () => {
+    render(<TermsScreen />);
+    expect(screen.getByTestId('terms-screen')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
+    expect(screen.getByTestId('terms-screen')).toHaveTextContent(/주소: 서울특별시 강남구 도산대로46길 21, 비132호\(논현동, 한진로즈힐아파트\)/);
+    expect(screen.getByTestId('terms-screen')).toHaveTextContent(/이 용 약 관/);
+    expect(screen.queryByTestId('login-artboard')).toBeNull();
   });
 
   it('renders support copy on the support route', () => {
