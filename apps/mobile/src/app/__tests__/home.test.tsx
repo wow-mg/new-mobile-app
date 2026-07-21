@@ -302,7 +302,7 @@ describe('Home screen', () => {
   it('renders the privacy policy publicly without starting a participant session', () => {
     render(<PrivacyPolicyScreen />);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
-    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보처리방침 담당자: 홍승표 부장님/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보처리방침 담당자: 홍승표 부장/);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보 보호법/);
     expect(screen.queryByTestId('login-artboard')).toBeNull();
   });
