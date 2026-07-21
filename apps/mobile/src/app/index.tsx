@@ -17,7 +17,6 @@ import {
 } from '../participant/mock-session';
 import { createParticipantApiClient, getParticipantApiConfigFromPublicEnv, type ParticipantApiClient } from '../participant/api-client';
 import { describeKakaoCallbackResult, describeSocialLoginAvailability, getSocialLoginConfig, type KakaoCallbackResult, type SocialLoginConfig } from '../auth/social-login-config';
-import { defaultKakaoAuthClient, type CompleteKakaoAdditionalInfo } from '../auth/kakao-auth-client';
 
 const palette = {
   brand: '#558d60',
@@ -80,6 +79,12 @@ type KakaoDevSessionSnapshot = {
   memberId?: string;
   displayName?: string;
   action: 'login' | 'signup';
+};
+
+type CompleteKakaoAdditionalInfo = (input: { continuationToken: string; email: string; displayName: string; phone?: string }) => Promise<Extract<KakaoCallbackResult, { action: 'login' | 'signup' }>>;
+
+const unavailableKakaoAdditionalInfoClient: CompleteKakaoAdditionalInfo = async () => {
+  throw new Error('KAKAO_AUTH_API_NOT_CONFIGURED');
 };
 
 let persistedKakaoDevSession: KakaoDevSessionSnapshot | null = null;
@@ -632,7 +637,7 @@ function describeKakaoAdditionalInfoError(error: unknown) {
   return '가입을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
-export function KakaoAdditionalInfoScreen({ continuationToken: continuationTokenProp, completeAdditionalInfo = defaultKakaoAuthClient.completeAdditionalInfo }: { continuationToken?: string; completeAdditionalInfo?: CompleteKakaoAdditionalInfo } = {}) {
+export function KakaoAdditionalInfoScreen({ continuationToken: continuationTokenProp, completeAdditionalInfo = unavailableKakaoAdditionalInfoClient }: { continuationToken?: string; completeAdditionalInfo?: CompleteKakaoAdditionalInfo } = {}) {
   const params = useLocalSearchParams<{ continuationToken?: string }>();
   const continuationToken = continuationTokenProp ?? (typeof params.continuationToken === 'string' ? params.continuationToken : undefined);
   const [email, setEmail] = useState('');
