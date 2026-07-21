@@ -43,7 +43,7 @@ const defaultTournamentId = sandboxParticipantSession.featuredTournament.tournam
 
 const companyLegalInfo = [
   '(주) 와우매니지먼트그룹',
-  '대표자: 장상진, 이희진',
+  '대표자: 장상진',
   '사업자등록번호: 604-88-01570',
   '주소: 서울특별시 강남구 도산대로46길 21, 비132호(논현동, 한진로즈힐아파트)',
   '개인정보처리방침 담당자: 홍승표',
