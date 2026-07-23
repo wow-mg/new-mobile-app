@@ -28,6 +28,15 @@ const allowedCorsOrigins = [
 
 export const app = new Hono()
   .route('/', healthRoute)                          // /livez, /readyz — 무인증
+  .use(
+    '/auth/*',
+    cors({
+      origin: (origin) => (allowedCorsOrigins.includes(origin) ? origin : undefined),
+      allowMethods: ['GET', 'POST', 'OPTIONS'],
+      allowHeaders: ['content-type'],
+      maxAge: 600,
+    }),
+  )
   .route('/auth', kakaoAuthRoute)                   // /auth/kakao — dev OAuth initiation, no client secret exposure
   .use(
     '/api/*',

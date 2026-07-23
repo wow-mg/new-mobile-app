@@ -334,6 +334,58 @@ describe('Kakao OAuth dev initiation route', () => {
     expect(redirect.toString()).not.toMatch(/accessToken|dev-session|memberId|web%40/);
   });
 
+  it('allows the deployed dev web app to continue Kakao auth outcomes through CORS', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    process.env.EXPO_PUBLIC_APP_SCHEME = 'happickle';
+    mockKakaoFetch({ id: 'dev-web-cors', email: 'web-cors@example.invalid', nickname: '웹CORS' });
+    const { app } = await loadApp();
+
+    const origin = 'https://picklehub-mobile-dev-production.up.railway.app';
+    const preflight = await app.request('/auth/kakao/continue', {
+      method: 'OPTIONS',
+      headers: {
+        origin,
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'content-type',
+      },
+    });
+
+    expect(preflight.status).toBe(204);
+    expect(preflight.headers.get('access-control-allow-origin')).toBe(origin);
+    expect(preflight.headers.get('access-control-allow-methods')).toContain('POST');
+    expect(preflight.headers.get('access-control-allow-headers')).toContain('content-type');
+
+    const returnTo = `${origin}/`;
+    const start = await app.request(`/auth/kakao?returnTo=${encodeURIComponent(returnTo)}`, { redirect: 'manual' });
+    const state = new URL(start.headers.get('location') ?? '').searchParams.get('state');
+    const callback = await app.request(`/auth/kakao/callback?code=dev-web-cors&state=${encodeURIComponent(state ?? '')}`, { redirect: 'manual' });
+    const outcomeId = new URL(callback.headers.get('location') ?? '').searchParams.get('outcomeId');
+
+    const continued = await app.request('/auth/kakao/continue', {
+      method: 'POST',
+      headers: { origin, 'content-type': 'application/json' },
+      body: JSON.stringify({ outcomeId }),
+    });
+
+    expect(continued.status).toBe(201);
+    expect(continued.headers.get('access-control-allow-origin')).toBe(origin);
+    expect(await continued.json()).toMatchObject({ action: 'signup', member: { kakaoUserId: 'dev-web-cors' } });
+  });
+
+  it('does not allow untrusted origins to continue Kakao auth outcomes through CORS', async () => {
+    const { app } = await loadApp();
+    const preflight = await app.request('/auth/kakao/continue', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://attacker.example.invalid',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'content-type',
+      },
+    });
+
+    expect(preflight.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
   it('does not redirect a callback to a non-allowlisted custom scheme', async () => {
     process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
     process.env.EXPO_PUBLIC_APP_SCHEME = 'happickle';
