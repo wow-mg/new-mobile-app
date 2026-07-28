@@ -50,13 +50,10 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
 
 describe('participant API client', () => {
   const originalApiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const originalParticipantBearer = process.env.EXPO_PUBLIC_PARTICIPANT_API_BEARER_TOKEN;
 
   afterEach(() => {
     if (originalApiUrl === undefined) delete process.env.EXPO_PUBLIC_API_URL;
     else process.env.EXPO_PUBLIC_API_URL = originalApiUrl;
-    if (originalParticipantBearer === undefined) delete process.env.EXPO_PUBLIC_PARTICIPANT_API_BEARER_TOKEN;
-    else process.env.EXPO_PUBLIC_PARTICIPANT_API_BEARER_TOKEN = originalParticipantBearer;
   });
 
   it('stays disabled without bearer auth so the app can use mock fallback', async () => {
@@ -66,16 +63,13 @@ describe('participant API client', () => {
     await expect(client.getTournaments()).rejects.toThrow('PARTICIPANT_API_NOT_CONFIGURED');
   });
 
-  it('reads public API URL and bearer token env config for deployed mobile hydration', () => {
+  it('never reads a bearer credential from public mobile environment config', () => {
     process.env.EXPO_PUBLIC_API_URL = 'https://api.example.invalid';
     process.env.EXPO_PUBLIC_PARTICIPANT_API_BEARER_TOKEN = 'public-token-shaped-value';
 
     const config = getParticipantApiConfigFromPublicEnv();
-    expect(config).toMatchObject({
-      baseUrl: 'https://api.example.invalid',
-      bearerToken: 'public-token-shaped-value',
-    });
-    expect(createParticipantApiClient(config).enabled).toBe(true);
+    expect(config).toEqual({ baseUrl: 'https://api.example.invalid' });
+    expect(createParticipantApiClient(config).enabled).toBe(false);
   });
 
   it('calls authenticated participant MVP endpoints and parses responses', async () => {
@@ -113,7 +107,7 @@ describe('participant API client', () => {
 
     const apiApplication = await client.getTournamentApplication(application.applicationId);
     expect(describeApplicationPolicy(apiApplication)).toBe('참가자 직접 취소 불가 · 1:1 문의');
-    expect(describeSupportRefundPolicyCopy(apiApplication)).toContain('Participant self-cancel/refund is not available in MVP.');
+    expect(describeSupportRefundPolicyCopy(apiApplication)).toContain('참가자 직접 취소/환불은 1:1 문의로 운영자가 확인합니다.');
 
     expect(fetchImpl).toHaveBeenCalledWith(expect.stringMatching(/^https:\/\/api\.example\.invalid\/api\//), expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),

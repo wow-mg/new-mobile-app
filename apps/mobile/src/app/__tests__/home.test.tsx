@@ -3,11 +3,18 @@ import { router } from 'expo-router';
 import { Linking } from 'react-native';
 import Home, {
   clearKakaoDevSession,
+  CancelCompleteScreen,
+  CancelConfirmScreen,
   DuprProfileScreen,
   KakaoAdditionalInfoScreen,
   MyPageScreen,
   NotificationsScreen,
+  PartnerAcceptScreen,
+  PaymentCompleteScreen,
+  PaymentFailureScreen,
+  PaymentScreen,
   PrivacyPolicyScreen,
+  ReservationHistoryScreen,
   SupportScreen,
   TermsScreen,
   TournamentApplicationScreen,
@@ -63,7 +70,12 @@ describe('Home screen', () => {
     expect(screen.getByTestId('login-consent-copy')).toHaveTextContent('처음이시면 자동으로 회원가입이 진행돼요');
     expect(screen.queryByTestId('application-cta')).toBeNull();
     expect(screen.queryByText(/Admin Web/i)).toBeNull();
+    expect(screen.queryByText(/운영예정기능|안전하게 미리 볼 수 있어요/)).toBeNull();
 
+    fireEvent.press(screen.getByTestId('login-logo'));
+    expect(mockPush).toHaveBeenCalledWith('/');
+
+    mockPush.mockClear();
     fireEvent.press(screen.getByTestId('apple-login-button'));
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -94,7 +106,8 @@ describe('Home screen', () => {
       appleConfigured: false,
     }} />);
 
-    expect(screen.getByTestId('social-login-pending-copy')).toHaveTextContent(/OAuth 확인 경로가 준비되었습니다/);
+    expect(screen.queryByTestId('social-login-pending-copy')).toBeNull();
+    expect(screen.queryByText(/OAuth 확인 경로가 준비되었습니다|dev 환경에서 카카오 로그인 화면|안전하게 미리 볼 수 있어요/)).toBeNull();
     expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: false });
 
     fireEvent.press(screen.getByTestId('kakao-login-button'));
@@ -102,8 +115,16 @@ describe('Home screen', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
+  it('routes the shared header logo to the main route', () => {
+    startParticipantSession();
+    render(<TournamentsScreen />);
+
+    fireEvent.press(screen.getByTestId('header-logo'));
+    expect(mockPush).toHaveBeenCalledWith('/');
+  });
+
   it('shows additional-info guidance from a Kakao callback response without starting a session', () => {
-    render(<Home kakaoCallbackResult={{ action: 'additional_info_required', reason: 'EMAIL_MISSING', kakaoUserId: '777', continuationToken: '00000000-0000-4000-8000-000000000000', next: '/auth/additional-info' }} />);
+    render(<Home kakaoCallbackResult={{ action: 'additional_info_required', reason: 'EMAIL_MISSING', continuationToken: '00000000-0000-4000-8000-000000000000', next: '/auth/additional-info' }} />);
 
     expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/필수 정보가 부족/);
     expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/추가 정보/);
@@ -114,7 +135,7 @@ describe('Home screen', () => {
   });
 
   it('reads the state-bound Kakao callback from real route parameters', () => {
-    mockLocalSearchParams.mockReturnValue({ action: 'additional_info_required', reason: 'EMAIL_MISSING', kakaoUserId: '777', continuationToken: '00000000-0000-4000-8000-000000000000', next: '/auth/additional-info' });
+    mockLocalSearchParams.mockReturnValue({ action: 'additional_info_required', reason: 'EMAIL_MISSING', continuationToken: '00000000-0000-4000-8000-000000000000', next: '/auth/additional-info' });
     render(<Home />);
 
     expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/추가 정보/);
@@ -130,11 +151,54 @@ describe('Home screen', () => {
     expect(screen.queryByTestId('kakao-dev-session-persistence-copy')).toBeNull();
   });
 
+  it('exchanges a state-bound auth-complete outcome through the Kakao client', async () => {
+    const continueAuth = jest.fn().mockResolvedValue({ action: 'login', member: { memberId: 'dev-member-existing', kakaoUserId: 'existing-kakao-id', displayName: '기존회원', status: 'active' }, session: { kind: 'dev-session', accessToken: 'test-only-session-value', memberId: 'dev-member-existing' } });
+    mockLocalSearchParams.mockReturnValue({ action: 'auth_complete', outcomeId: '00000000-0000-4000-8000-000000000000' });
+    render(<Home kakaoAuthClient={{ completeAdditionalInfo: jest.fn(), continueAuth }} />);
+    await waitFor(() => expect(continueAuth).toHaveBeenCalledWith({ outcomeId: '00000000-0000-4000-8000-000000000000' }));
+    await waitFor(() => expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: true }));
+    expect(mockPush).toHaveBeenCalledWith('/tournaments');
+  });
+
+  it('shows loading while a state-bound Kakao outcome is being continued', async () => {
+    const pendingContinue = new Promise<never>(() => undefined);
+    const continueAuth = jest.fn(() => pendingContinue);
+    mockLocalSearchParams.mockReturnValue({ action: 'auth_complete', outcomeId: '00000000-0000-4000-8000-000000000000' });
+
+    render(<Home kakaoAuthClient={{ completeAdditionalInfo: jest.fn(), continueAuth }} />);
+
+    expect(await screen.findByTestId('kakao-auth-continuation-status')).toHaveTextContent(/로그인을 완료하고 있어요/);
+    expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: false, persistedKakaoDevSession: null });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a safe error and does not start a session when Kakao continuation fails', async () => {
+    const continueAuth = jest.fn().mockRejectedValue(new Error('AUTH_OUTCOME_NOT_PENDING'));
+    mockLocalSearchParams.mockReturnValue({ action: 'auth_complete', outcomeId: '00000000-0000-4000-8000-000000000000' });
+
+    render(<Home kakaoAuthClient={{ completeAdditionalInfo: jest.fn(), continueAuth }} />);
+
+    expect(await screen.findByTestId('kakao-auth-continuation-status')).toHaveTextContent(/만료.*다시/);
+    expect(screen.getByTestId('kakao-auth-continuation-status')).not.toHaveTextContent('AUTH_OUTCOME_NOT_PENDING');
+    expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: false, persistedKakaoDevSession: null });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('routes a continued Kakao signup to signup completion', async () => {
+    const continueAuth = jest.fn().mockResolvedValue({ action: 'signup', member: { memberId: 'dev-member-new', kakaoUserId: 'new-kakao-id', displayName: '신규회원', status: 'active' }, session: { kind: 'dev-session', accessToken: 'test-only-session-value', memberId: 'dev-member-new' } });
+    mockLocalSearchParams.mockReturnValue({ action: 'auth_complete', outcomeId: '00000000-0000-4000-8000-000000000000' });
+
+    render(<Home kakaoAuthClient={{ completeAdditionalInfo: jest.fn(), continueAuth }} />);
+
+    await waitFor(() => expect(getParticipantSnapshot()).toMatchObject({ socialSessionStarted: true, persistedKakaoDevSession: { action: 'signup', memberId: 'dev-member-new', displayName: '신규회원' } }));
+    expect(mockPush).toHaveBeenCalledWith('/signup-complete');
+  });
+
   it('submits Kakao additional info and starts the returned dev session', async () => {
     const completeAdditionalInfo = jest.fn().mockResolvedValue({
       action: 'signup',
-      member: { displayName: '김카카오' },
-      session: { kind: 'dev-session', memberId: 'dev-member-777' },
+      member: { memberId: 'dev-member-777', kakaoUserId: '777', email: 'member@example.invalid', displayName: '김카카오', status: 'active' },
+      session: { kind: 'dev-session', accessToken: 'test-only-session-value', memberId: 'dev-member-777' },
     });
     render(<KakaoAdditionalInfoScreen continuationToken="00000000-0000-4000-8000-000000000000" completeAdditionalInfo={completeAdditionalInfo} />);
 
@@ -189,9 +253,10 @@ describe('Home screen', () => {
   });
 
   it('persists a sanitized Kakao dev-session callback across a local app restart', () => {
-    render(<Home kakaoCallbackResult={{ action: 'signup', member: { displayName: '김카카오' }, session: { kind: 'dev-session', memberId: 'member_local_001' } }} />);
+    render(<Home kakaoCallbackResult={{ action: 'signup', member: { memberId: 'member_local_001', kakaoUserId: 'kakao-local-001', displayName: '김카카오', status: 'active' }, session: { kind: 'dev-session', accessToken: 'test-only-session-value', memberId: 'member_local_001' } }} />);
 
-    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/로컬 dev 세션/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).toHaveTextContent(/카카오 가입이 확인되었습니다/);
+    expect(screen.getByTestId('kakao-callback-result-copy')).not.toHaveTextContent(/dev 세션|대회 둘러보기/);
     expect(screen.getByTestId('kakao-dev-session-persistence-copy')).toHaveTextContent(/앱 재시작 후에도/);
 
     resetParticipantFlow();
@@ -301,14 +366,21 @@ describe('Home screen', () => {
 
   it('renders the privacy policy publicly without starting a participant session', () => {
     render(<PrivacyPolicyScreen />);
+    expect(screen.getByTestId('privacy-policy-draft-notice')).toHaveTextContent(/검토 중인 초안.*게시된 방침이 아닙니다/);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보처리방침 담당자: 홍승표/);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/개인정보 보호법/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/성별/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/연령대/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/생일/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/출생 연도/);
+    expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/선택적으로 수집/);
     expect(screen.queryByTestId('login-artboard')).toBeNull();
   });
 
   it('renders the terms page publicly without starting a participant session', () => {
     render(<TermsScreen />);
+    expect(screen.getByTestId('terms-draft-notice')).toHaveTextContent(/검토 중인 초안.*게시된 약관이 아닙니다/);
     expect(screen.getByTestId('terms-screen')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
     expect(screen.getByTestId('terms-screen')).toHaveTextContent(/주소: 서울특별시 강남구 도산대로46길 21, 비132호\(논현동, 한진로즈힐아파트\)/);
     expect(screen.getByTestId('terms-screen')).toHaveTextContent(/이 용 약 관/);
@@ -319,9 +391,74 @@ describe('Home screen', () => {
     startParticipantSession();
     render(<SupportScreen />);
 
+    expect(screen.getByTestId('support-readiness-notice')).toHaveTextContent(/개발·스테이징.*운영자가 확인/);
     expect(screen.getByTestId('support-copy')).toHaveTextContent(/1:1 문의로 접수/);
     expect(screen.getByTestId('support-copy')).toHaveTextContent(/참가자 직접 취소\/환불은 1:1 문의/);
     expect(screen.getByText(/support@happickle\.kr \(1:1 문의 접수용\)/)).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('support-reservations-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/reservation-history');
+    fireEvent.press(screen.getByTestId('support-terms-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/terms');
+    fireEvent.press(screen.getByTestId('support-privacy-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/privacy-policy');
+  });
+
+  it('shows operator-managed application, payment, and refund readiness without implying a live flow', () => {
+    startParticipantSession();
+    render(<PaymentScreen />);
+
+    expect(screen.getByTestId('payment-readiness-notice')).toHaveTextContent(/앱 내 결제 기능은 연결되지 않았습니다/);
+    expect(screen.getByTestId('payment-readiness-notice')).toHaveTextContent(/운영자 확인 상태만 표시/);
+    expect(screen.queryByText(/결제가 완료되었어요/)).toBeNull();
+  });
+
+  it('shows application, payment, and refund as operator-confirmed reservation states', () => {
+    startParticipantSession();
+    render(<ReservationHistoryScreen />);
+    expect(screen.getByTestId('reservation-status-notice')).toHaveTextContent(/신청 접수.*결제.*환불.*운영자 확인/);
+  });
+
+  it('keeps reachable payment and refund terminal routes in operator-review status', () => {
+    startParticipantSession();
+    render(<PaymentCompleteScreen />);
+    expect(screen.getByTestId('payment-complete-hero')).toHaveTextContent(/운영자 결제 확인 상태/);
+    expect(screen.getByTestId('payment-complete-hero')).not.toHaveTextContent(/결제가 완료|신청이 확정/);
+    expect(screen.queryByText(/카드결제 \(PG\)/)).toBeNull();
+
+    cleanup();
+  });
+
+  it('shows cancellation as an operator-handled request rather than a completed refund', () => {
+    startParticipantSession();
+    render(<CancelCompleteScreen />);
+    expect(screen.getByTestId('cancel-complete-hero')).toHaveTextContent(/취소·환불 요청 접수/);
+    expect(screen.getByTestId('cancel-complete-hero')).not.toHaveTextContent(/취소가 완료|환불은.*이내 처리/);
+    expect(screen.queryByText(/카드결제 \(PG\)|영업일 기준 3~5일/)).toBeNull();
+  });
+
+  it('keeps cancel confirmation operator-managed without refund timing promises', () => {
+    startParticipantSession();
+    render(<CancelConfirmScreen />);
+    expect(screen.getAllByText(/운영자.*확인/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/카드결제 \(PG\)|영업일 기준 3~5일|되돌릴 수 없|환불 예정 금액|100% 환불 대상/)).toBeNull();
+  });
+
+  it('routes retry and partner acceptance to operator-managed payment guidance', () => {
+    startParticipantSession();
+    render(<PaymentFailureScreen />);
+    expect(screen.getByTestId('payment-failure-hero')).toHaveTextContent(/앱 내 결제 기능은 연결되지 않았습니다/);
+    fireEvent.press(screen.getByTestId('payment-failure-retry-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/payment');
+
+    cleanup();
+  });
+
+  it('routes partner acceptance to payment guidance without claiming completion', () => {
+    startParticipantSession();
+    render(<PartnerAcceptScreen />);
+    fireEvent.press(screen.getByTestId('partner-accept-button'));
+    expect(mockPush).toHaveBeenLastCalledWith('/payment');
   });
 
   it('uses the login reference dark surround, white artboard, and social button colors', () => {

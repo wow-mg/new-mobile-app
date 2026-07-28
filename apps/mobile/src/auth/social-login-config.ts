@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import type { KakaoAuthCallbackRedirect, KakaoDevAuthSuccess } from '@template/contracts';
 
 export type KakaoConfigPresence = {
   nativeAppKeyConfigured: boolean;
@@ -12,11 +13,7 @@ export type SocialLoginConfig = {
   appleConfigured: boolean;
 };
 
-export type KakaoCallbackResult =
-  | { action: 'login' | 'signup'; member?: { displayName?: string }; session?: { kind?: string; memberId?: string } }
-  | { action: 'additional_info_required'; reason?: string; next?: string }
-  | { action: 'blocked'; reason?: string; message?: string }
-  | { error: string; message?: string };
+export type KakaoCallbackResult = KakaoAuthCallbackRedirect | KakaoDevAuthSuccess | { error: string; message?: string };
 
 type SocialLoginExtra = {
   socialLogin?: {
@@ -46,7 +43,7 @@ export function getSocialLoginConfig(extra: SocialLoginExtra = Constants.expoCon
 
 export function describeSocialLoginAvailability(config: SocialLoginConfig): string {
   if (config.kakao.authStartUrl) {
-    return '카카오 OAuth 확인 경로가 준비되었습니다. dev 환경에서 카카오 로그인 화면으로 이동할 수 있어요.';
+    return '';
   }
 
   const configuredKeyCount = [config.kakao.nativeAppKeyConfigured, config.kakao.restApiKeyConfigured, config.kakao.javascriptKeyConfigured].filter(Boolean).length;
@@ -76,6 +73,8 @@ export function describeKakaoCallbackResult(result: KakaoCallbackResult | null |
     return '카카오 계정에 필수 정보가 부족해요. 이메일 등 추가 정보를 확인한 뒤 가입을 계속합니다.';
   }
 
+  if (result.action === 'auth_complete') return '카카오 로그인을 확인하고 있습니다.';
+
   if (result.action === 'blocked') {
     if (result.reason === 'DUPLICATE_EMAIL') return result.message ? `${result.message} 기존 계정으로 로그인해 주세요.` : '이미 가입된 이메일입니다. 기존 계정으로 로그인해 주세요.';
     if (result.reason === 'DUPLICATE_PHONE') return result.message ? `${result.message} 기존 계정으로 로그인하거나 1:1 문의로 연락처 확인을 요청해 주세요.` : '이미 가입된 연락처입니다. 기존 계정으로 로그인하거나 1:1 문의로 확인해 주세요.';
@@ -83,6 +82,6 @@ export function describeKakaoCallbackResult(result: KakaoCallbackResult | null |
     return result.message ?? '카카오 계정 확인이 차단되었습니다. 1:1 문의로 확인해 주세요.';
   }
 
-  if (result.action === 'signup') return '카카오 가입이 로컬 dev 세션으로 확인되었습니다. 대회 둘러보기를 계속할 수 있어요.';
-  return '카카오 로그인이 로컬 dev 세션으로 확인되었습니다. 대회 둘러보기를 계속할 수 있어요.';
+  if (result.action === 'signup') return '카카오 가입이 확인되었습니다.';
+  return '카카오 로그인이 확인되었습니다.';
 }

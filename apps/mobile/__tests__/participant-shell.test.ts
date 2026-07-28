@@ -48,6 +48,7 @@ import {
 import type { ParticipantApiClient } from '../src/participant/api-client';
 
 jest.mock('expo-router', () => ({
+  useLocalSearchParams: jest.fn(() => ({})),
   router: {
     push: jest.fn(),
   },
@@ -282,23 +283,22 @@ describe('participant shell sandbox contract', () => {
       React.createElement(PaymentFailureScreen),
     ));
 
-    expect(screen.getByTestId('payment-complete-hero')).toHaveTextContent(/결제가 완료되었어요/);
+    expect(screen.getByTestId('payment-complete-hero')).toHaveTextContent(/운영자 결제 확인 상태/);
     expect(screen.getByTestId('payment-complete-screen')).toHaveTextContent(/남자복식 · 김민준 \/ 이서연/);
     expect(screen.getByText('내 경기 보기')).toBeTruthy();
     expect(screen.getByTestId('cancel-confirm-hero')).toHaveTextContent(/참가 취소/);
-    expect(screen.getByText(/3일 전 취소 · 100% 환불 대상/)).toBeTruthy();
-    expect(screen.getByTestId('cancel-confirm-button')).toHaveTextContent(/취소 확정하기/);
-    expect(screen.getByTestId('cancel-complete-hero')).toHaveTextContent(/취소가 완료됐어요/);
-    expect(screen.getByText(/2026.08.04/)).toBeTruthy();
-    expect(screen.getByTestId('payment-failure-hero')).toHaveTextContent(/결제에 실패했어요/);
-    expect(screen.getByText(/카드 한도 초과/)).toBeTruthy();
+    expect(screen.getByText(/환불 가능 여부 운영자 확인 대기/)).toBeTruthy();
+    expect(screen.getByTestId('cancel-confirm-button')).toHaveTextContent(/취소·환불 1:1 문의/);
+    expect(screen.getByTestId('cancel-complete-hero')).toHaveTextContent(/취소·환불 요청 접수/);
+    expect(screen.getByText(/운영자 확인 후 안내/)).toBeTruthy();
+    expect(screen.getByTestId('payment-failure-hero')).toHaveTextContent(/앱 내 결제 기능은 연결되지 않았습니다/);
 
     fireEvent.press(screen.getByTestId('payment-complete-games-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/games');
     fireEvent.press(screen.getByTestId('cancel-confirm-button'));
-    expect(mockPush).toHaveBeenLastCalledWith('/cancel-complete');
+    expect(mockPush).toHaveBeenLastCalledWith('/support');
     fireEvent.press(screen.getByTestId('payment-failure-retry-button'));
-    expect(mockPush).toHaveBeenLastCalledWith('/payment-complete');
+    expect(mockPush).toHaveBeenLastCalledWith('/payment');
   });
 
   it('renders invite and partner terminal route shells with navigation markers', () => {
@@ -319,7 +319,7 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('partner-declined-hero')).toHaveTextContent(/이서연님이 초대를 거절했어요/);
 
     fireEvent.press(screen.getByTestId('partner-accept-button'));
-    expect(mockPush).toHaveBeenLastCalledWith('/payment-complete');
+    expect(mockPush).toHaveBeenLastCalledWith('/payment');
     fireEvent.press(screen.getByTestId('partner-declined-screen-reinvite-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/invite');
     fireEvent.press(screen.getByTestId('invite-expired-screen-cancel-button'));

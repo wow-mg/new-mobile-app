@@ -4,12 +4,23 @@ import { zValidator } from '@hono/zod-validator';
 import { kakaoAdditionalInfoRequestSchema, kakaoAuthContinueRequestSchema } from '@template/contracts';
 import { Env } from '../env.js';
 import { findOrCreateKakaoMember, markKakaoMemberWithdrawn, type KakaoMember } from '../services/kakao-identity.service.js';
+import {
+  consumeParticipantDevSession,
+  expireParticipantDevSession,
+  issueParticipantDevSession,
+  participantDevSessionCount,
+  resetParticipantDevSessions,
+  revokeParticipantDevSession,
+} from '../services/participant-session.service.js';
 
 const KAKAO_AUTHORIZE_URL = 'https://kauth.kakao.com/oauth/authorize';
 const KAKAO_TOKEN_URL = 'https://kauth.kakao.com/oauth/token';
 const KAKAO_USERINFO_URL = 'https://kapi.kakao.com/v2/user/me';
+const KAKAO_LOGOUT_URL = 'https://kapi.kakao.com/v1/user/logout';
+const KAKAO_UNLINK_URL = 'https://kapi.kakao.com/v1/user/unlink';
 const KAKAO_CALLBACK_PATH = '/auth/kakao/callback';
 const DEV_AUTH_HANDOFF_TTL_MS = 10 * 60 * 1000;
+const KAKAO_SESSION_ACTION_TIMEOUT_MS = 5 * 1000;
 
 type KakaoTokenResponse = {
   access_token?: unknown;
@@ -33,9 +44,22 @@ type KakaoUserInfoResponse = {
   kakao_account?: KakaoAccount;
 };
 
-const pendingDevProfilesByToken = new Map<string, { profile: { kakaoUserId: string; phone?: string; displayName: string }; expiresAt: number }>();
+const pendingDevProfilesByToken = new Map<string, { profile: { kakaoUserId: string; phone?: string; displayName: string }; providerAccessToken: string; expiresAt: number }>();
 const devMobileReturnsByOauthState = new Map<string, { returnTo: string; expiresAt: number }>();
 const pendingDevAuthOutcomes = new Map<string, { result: Extract<Awaited<ReturnType<typeof continueDevLogin>>, { action: 'login' | 'signup' }>; expiresAt: number }>();
+
+function deleteExpiredEntries<T extends { expiresAt: number }>(entries: Map<string, T>, now = Date.now()) {
+  for (const [key, value] of entries) {
+    if (value.expiresAt <= now) entries.delete(key);
+  }
+}
+
+function cleanupExpiredDevAuthState() {
+  const now = Date.now();
+  deleteExpiredEntries(pendingDevProfilesByToken, now);
+  deleteExpiredEntries(devMobileReturnsByOauthState, now);
+  deleteExpiredEntries(pendingDevAuthOutcomes, now);
+}
 
 function getPublicBaseUrl(c: { req: { header: (name: string) => string | undefined; url: string } }) {
   const configuredBaseUrl = Env.PUBLIC_AUTH_BASE_URL?.replace(/\/$/, '');
@@ -63,6 +87,7 @@ function safeDevMobileReturnTo(value: string | undefined) {
 }
 
 function createKakaoAuthorizeUrl(baseUrl: string, returnTo?: string) {
+  cleanupExpiredDevAuthState();
   const url = new URL(KAKAO_AUTHORIZE_URL);
   url.searchParams.set('client_id', Env.SERVICE_REST_API_KEY ?? '');
   url.searchParams.set('redirect_uri', `${baseUrl}${KAKAO_CALLBACK_PATH}`);
@@ -140,26 +165,49 @@ async function fetchKakaoUserInfo(accessToken: string) {
   };
 }
 
-function issueDevSession(member: KakaoMember) {
-  return {
-    kind: 'dev-session',
-    accessToken: `dev-session:${member.memberId}`,
+function issueDevSession(member: KakaoMember, providerAccessToken: string) {
+  return issueParticipantDevSession({
     memberId: member.memberId,
-  };
+    kakaoUserId: member.kakaoUserId,
+    providerAccessToken,
+  });
 }
 
-async function continueDevLogin(profile: { kakaoUserId: string; email?: string; phone?: string; displayName: string }) {
+function presentDevAuthSuccess(result: Extract<Awaited<ReturnType<typeof continueDevLogin>>, { action: 'login' | 'signup' }>) {
+  const { providerAccessToken, ...publicResult } = result;
+  return { ...publicResult, session: issueDevSession(result.member, providerAccessToken) };
+}
+
+async function continueDevLogin(profile: { kakaoUserId: string; email?: string; phone?: string; displayName: string }, providerAccessToken: string) {
   const normalizedEmail = profile.email?.trim().toLowerCase();
   const result = await findOrCreateKakaoMember({ ...profile, email: normalizedEmail });
   if (result.action === 'additional_info_required') {
     const continuationToken = randomUUID();
     pendingDevProfilesByToken.set(continuationToken, {
       profile: { kakaoUserId: profile.kakaoUserId, phone: profile.phone, displayName: profile.displayName },
+      providerAccessToken,
       expiresAt: Date.now() + DEV_AUTH_HANDOFF_TTL_MS,
     });
     return { action: 'additional_info_required' as const, reason: 'EMAIL_MISSING', kakaoUserId: profile.kakaoUserId, continuationToken };
   }
-  return result.action === 'blocked' ? result : { ...result, session: issueDevSession(result.member) };
+  return result.action === 'blocked' ? result : { ...result, providerAccessToken };
+}
+
+function consumeDevSession(authorization: string | undefined) {
+  return consumeParticipantDevSession(authorization);
+}
+
+async function callKakaoSessionAction(url: string, providerAccessToken: string) {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${providerAccessToken}` },
+      signal: AbortSignal.timeout(KAKAO_SESSION_ACTION_TIMEOUT_MS),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 export const kakaoAuthRoute = new Hono()
@@ -184,7 +232,7 @@ export const kakaoAuthRoute = new Hono()
 
     const returnTo = consumeDevMobileReturn(c.req.query('state'));
     let result;
-    try { result = await continueDevLogin(userInfo); }
+    try { result = await continueDevLogin(userInfo, token.accessToken); }
     catch {
       const blocked = { action: 'blocked' as const, reason: 'AUTH_PERSISTENCE_UNAVAILABLE', message: '로그인 정보를 저장할 수 없습니다.' };
       if (returnTo) {
@@ -226,32 +274,58 @@ export const kakaoAuthRoute = new Hono()
       redirect.searchParams.set('outcomeId', outcomeId);
       return c.redirect(redirect.toString(), 302);
     }
-    return c.json({ action: result.action, member: result.member, session: result.session }, result.action === 'signup' ? 201 : 200);
+    const publicResult = presentDevAuthSuccess(result);
+    return c.json(publicResult, publicResult.action === 'signup' ? 201 : 200);
   })
   .post('/kakao/continue', zValidator('json', kakaoAuthContinueRequestSchema), (c) => {
+    cleanupExpiredDevAuthState();
     const { outcomeId } = c.req.valid('json');
     const pending = pendingDevAuthOutcomes.get(outcomeId);
     pendingDevAuthOutcomes.delete(outcomeId);
     if (!pending || pending.expiresAt <= Date.now()) return c.json({ action: 'blocked' as const, reason: 'AUTH_OUTCOME_NOT_PENDING', message: '로그인 계속 요청이 만료되었거나 유효하지 않습니다.' }, 409);
-    return c.json(pending.result, pending.result.action === 'signup' ? 201 : 200);
+    const publicResult = presentDevAuthSuccess(pending.result);
+    return c.json(publicResult, publicResult.action === 'signup' ? 201 : 200);
   })
   .post('/kakao/additional-info', zValidator('json', kakaoAdditionalInfoRequestSchema), async (c) => {
+    cleanupExpiredDevAuthState();
     const input = c.req.valid('json');
     const pending = pendingDevProfilesByToken.get(input.continuationToken);
     if (!pending || pending.expiresAt <= Date.now()) {
       pendingDevProfilesByToken.delete(input.continuationToken);
       return c.json({ action: 'blocked' as const, reason: 'ADDITIONAL_INFO_NOT_PENDING', message: '추가 정보 입력 요청이 만료되었거나 유효하지 않습니다.' }, 409);
     }
+    pendingDevProfilesByToken.delete(input.continuationToken);
     let result;
-    try { result = await continueDevLogin({ ...pending.profile, email: input.email, phone: input.phone ?? pending.profile.phone, displayName: input.displayName }); }
+    try { result = await continueDevLogin({ ...pending.profile, email: input.email, phone: input.phone ?? pending.profile.phone, displayName: input.displayName }, pending.providerAccessToken); }
     catch { return c.json({ action: 'blocked' as const, reason: 'AUTH_PERSISTENCE_UNAVAILABLE', message: '로그인 정보를 저장할 수 없습니다.' }, 503); }
     if (result.action === 'blocked') return c.json({ action: result.action, reason: result.reason, message: result.message }, 409);
     if (result.action === 'additional_info_required') return c.json({ action: 'blocked' as const, reason: 'EMAIL_MISSING', message: '이메일을 확인해 주세요.' }, 400);
-    pendingDevProfilesByToken.delete(input.continuationToken);
-    return c.json({ action: result.action, member: result.member, session: result.session }, result.action === 'signup' ? 201 : 200);
+    const publicResult = presentDevAuthSuccess(result);
+    return c.json(publicResult, publicResult.action === 'signup' ? 201 : 200);
   })
-  .post('/kakao/logout', (c) => c.json({ action: 'logout_pending', reason: 'SESSION_STORE_NOT_IMPLEMENTED' }, 501))
-  .post('/kakao/unlink', (c) => c.json({ action: 'unlink_pending', reason: 'KAKAO_UNLINK_NOT_IMPLEMENTED' }, 501));
+  .post('/kakao/logout', async (c) => {
+    const auth = consumeDevSession(c.req.header('authorization'));
+    if (!auth?.session) return c.json({ action: 'blocked' as const, reason: 'DEV_SESSION_INVALID' }, 401);
+    revokeParticipantDevSession(auth.accessToken);
+    if (!await callKakaoSessionAction(KAKAO_LOGOUT_URL, auth.session.providerAccessToken)) {
+      return c.json({ action: 'blocked' as const, reason: 'KAKAO_PROVIDER_UNAVAILABLE' }, 502);
+    }
+    return c.json({ action: 'logout' as const });
+  })
+  .post('/kakao/unlink', async (c) => {
+    const auth = consumeDevSession(c.req.header('authorization'));
+    if (!auth?.session) return c.json({ action: 'blocked' as const, reason: 'DEV_SESSION_INVALID' }, 401);
+    revokeParticipantDevSession(auth.accessToken);
+    try {
+      await markKakaoMemberWithdrawn(auth.session.kakaoUserId);
+    } catch {
+      return c.json({ action: 'blocked' as const, reason: 'AUTH_PERSISTENCE_UNAVAILABLE' }, 503);
+    }
+    if (!await callKakaoSessionAction(KAKAO_UNLINK_URL, auth.session.providerAccessToken)) {
+      return c.json({ action: 'blocked' as const, reason: 'KAKAO_PROVIDER_UNAVAILABLE' }, 502);
+    }
+    return c.json({ action: 'unlink' as const });
+  });
 
 export const KAKAO_AUTH_ROUTE_MARKERS = {
   authorizeHost: 'kauth.kakao.com',
@@ -266,10 +340,17 @@ export const __kakaoAuthDevTestState = {
     pendingDevProfilesByToken.clear();
     devMobileReturnsByOauthState.clear();
     pendingDevAuthOutcomes.clear();
+    resetParticipantDevSessions();
   },
   markWithdrawn: markKakaoMemberWithdrawn,
   expireAdditionalInfo(continuationToken: string) {
     const pending = pendingDevProfilesByToken.get(continuationToken);
     if (pending) pendingDevProfilesByToken.set(continuationToken, { ...pending, expiresAt: 0 });
+  },
+  expireSession(accessToken: string) {
+    expireParticipantDevSession(accessToken);
+  },
+  sessionCount() {
+    return participantDevSessionCount();
   },
 };

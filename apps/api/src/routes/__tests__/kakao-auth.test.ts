@@ -61,6 +61,12 @@ function mockKakaoFetch(profile: { id?: string | number; email?: string; phone?:
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
+    if (href === 'https://kapi.kakao.com/v1/user/logout' || href === 'https://kapi.kakao.com/v1/user/unlink') {
+      return new Response(JSON.stringify({ id: profile.id }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
     throw new Error(`unexpected fetch ${href}`);
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -133,8 +139,9 @@ describe('Kakao OAuth dev initiation route', () => {
     expect(body).toMatchObject({
       action: 'signup',
       member: { memberId: 'dev-member-12345', kakaoUserId: '12345', email: 'member@example.invalid', displayName: '피클러', status: 'active' },
-      session: { kind: 'dev-session', accessToken: 'dev-session:dev-member-12345', memberId: 'dev-member-12345' },
+      session: { kind: 'dev-session', memberId: 'dev-member-12345' },
     });
+    expect(body.session.accessToken).toMatch(/^[0-9a-f-]{36}$/);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -477,15 +484,136 @@ describe('Kakao OAuth dev initiation route', () => {
     expect(await relogin.json()).toEqual({ action: 'blocked', reason: 'WITHDRAWN_MEMBER', message: '탈퇴 처리된 계정은 재가입 정책 확인 후 이용할 수 있습니다.' });
   });
 
-  it('keeps logout and unlink explicit local blockers until persistent sessions and Kakao unlink are implemented', async () => {
+  it('logs out the Kakao provider session and invalidates the local dev session', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    const fetchMock = mockKakaoFetch({ id: 'logout-id', email: 'logout@example.invalid' });
     const { app } = await loadApp();
+    const login = await app.request('/auth/kakao/callback?code=logout-code');
+    const { session } = await login.json() as { session: { accessToken: string } };
+    expect(session.accessToken).not.toContain('dev-member-logout-id');
+    expect(session.accessToken).toMatch(/^[0-9a-f-]{36}$/);
 
-    const logout = await app.request('/auth/kakao/logout', { method: 'POST' });
-    const unlink = await app.request('/auth/kakao/unlink', { method: 'POST' });
+    const logout = await app.request('/auth/kakao/logout', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    const reused = await app.request('/auth/kakao/logout', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
 
-    expect(logout.status).toBe(501);
-    expect(await logout.json()).toEqual({ action: 'logout_pending', reason: 'SESSION_STORE_NOT_IMPLEMENTED' });
-    expect(unlink.status).toBe(501);
-    expect(await unlink.json()).toEqual({ action: 'unlink_pending', reason: 'KAKAO_UNLINK_NOT_IMPLEMENTED' });
+    expect(logout.status).toBe(200);
+    expect(await logout.json()).toEqual({ action: 'logout' });
+    expect(reused.status).toBe(401);
+    expect(fetchMock.mock.calls.some(([url]) => String(url) === 'https://kapi.kakao.com/v1/user/logout')).toBe(true);
+  });
+
+  it.each([
+    ['non-OK response', () => Promise.resolve(new Response(null, { status: 503 }))],
+    ['transport exception', () => Promise.reject(new Error('provider unavailable'))],
+    ['timeout', () => Promise.reject(new DOMException('timed out', 'TimeoutError'))],
+  ])('invalidates the local session when Kakao logout has a %s', async (_case, providerResult) => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    const fetchMock = mockKakaoFetch({ id: 'logout-failure-id', email: 'logout-failure@example.invalid' });
+    const { app } = await loadApp();
+    const login = await app.request('/auth/kakao/callback?code=logout-code');
+    const { session } = await login.json() as { session: { accessToken: string } };
+    fetchMock.mockImplementationOnce(providerResult);
+
+    const logout = await app.request('/auth/kakao/logout', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    const reused = await app.request('/auth/kakao/logout', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+
+    expect(logout.status).toBe(502);
+    expect(await logout.json()).toEqual({ action: 'blocked', reason: 'KAKAO_PROVIDER_UNAVAILABLE' });
+    expect(reused.status).toBe(401);
+  });
+
+  it('expires dev sessions and removes their retained provider token', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    mockKakaoFetch({ id: 'expired-session-id', email: 'expired-session@example.invalid' });
+    const { app, kakaoDevTestState } = await loadApp();
+    const login = await app.request('/auth/kakao/callback?code=login-code');
+    const { session } = await login.json() as { session: { accessToken: string } };
+    kakaoDevTestState.expireSession(session.accessToken);
+
+    const logout = await app.request('/auth/kakao/logout', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+
+    expect(logout.status).toBe(401);
+    expect(kakaoDevTestState.sessionCount()).toBe(0);
+  });
+
+  it('unlinks Kakao, invalidates the local dev session, and blocks later login for the withdrawn member', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    const fetchMock = mockKakaoFetch({ id: 'unlink-id', email: 'unlink@example.invalid' });
+    const { app } = await loadApp();
+    const signup = await app.request('/auth/kakao/callback?code=unlink-code');
+    const { session } = await signup.json() as { session: { accessToken: string } };
+
+    const unlink = await app.request('/auth/kakao/unlink', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    const relogin = await app.request('/auth/kakao/callback?code=relogin-code');
+
+    expect(unlink.status).toBe(200);
+    expect(await unlink.json()).toEqual({ action: 'unlink' });
+    expect(relogin.status).toBe(409);
+    expect(await relogin.json()).toMatchObject({ action: 'blocked', reason: 'WITHDRAWN_MEMBER' });
+    expect(fetchMock.mock.calls.some(([url]) => String(url) === 'https://kapi.kakao.com/v1/user/unlink')).toBe(true);
+  });
+
+  it('withdraws locally and invalidates the session before a failed Kakao unlink', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    const fetchMock = mockKakaoFetch({ id: 'unlink-failure-id', email: 'unlink-failure@example.invalid' });
+    const { app } = await loadApp();
+    const signup = await app.request('/auth/kakao/callback?code=unlink-code');
+    const { session } = await signup.json() as { session: { accessToken: string } };
+    fetchMock.mockRejectedValueOnce(new Error('provider unavailable'));
+
+    const unlink = await app.request('/auth/kakao/unlink', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    const reused = await app.request('/auth/kakao/unlink', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    mockKakaoFetch({ id: 'unlink-failure-id', email: 'unlink-failure@example.invalid' });
+    const relogin = await app.request('/auth/kakao/callback?code=relogin-code');
+
+    expect(unlink.status).toBe(502);
+    expect(await unlink.json()).toEqual({ action: 'blocked', reason: 'KAKAO_PROVIDER_UNAVAILABLE' });
+    expect(reused.status).toBe(401);
+    expect(relogin.status).toBe(409);
+    expect(await relogin.json()).toMatchObject({ action: 'blocked', reason: 'WITHDRAWN_MEMBER' });
+  });
+
+  it('does not issue a local session until a mobile handoff is consumed', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    process.env.EXPO_PUBLIC_APP_SCHEME = 'happickle';
+    mockKakaoFetch({ id: 'deferred-session-id', email: 'deferred@example.invalid' });
+    const { app, kakaoDevTestState } = await loadApp();
+    const start = await app.request('/auth/kakao?returnTo=happickle%3A%2F%2F%2F', { redirect: 'manual' });
+    const state = new URL(start.headers.get('location') ?? '').searchParams.get('state');
+    const callback = await app.request(`/auth/kakao/callback?code=callback-code&state=${encodeURIComponent(state ?? '')}`, { redirect: 'manual' });
+    const outcomeId = new URL(callback.headers.get('location') ?? '').searchParams.get('outcomeId');
+
+    expect(kakaoDevTestState.sessionCount()).toBe(0);
+    const continued = await app.request('/auth/kakao/continue', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ outcomeId }),
+    });
+    expect(continued.status).toBe(201);
+    expect(kakaoDevTestState.sessionCount()).toBe(1);
   });
 });

@@ -15,6 +15,65 @@ export const counterEventRecordSchema = counterEventSchema.extend({
 });
 export type CounterEventRecord = z.infer<typeof counterEventRecordSchema>;
 
+export const kakaoAdditionalInfoRequestSchema = z.object({
+  continuationToken: z.string().uuid(),
+  email: z.string().trim().toLowerCase().email(),
+  displayName: z.string().trim().min(1),
+  phone: z.string().trim().min(1).optional(),
+});
+export type KakaoAdditionalInfoRequest = z.infer<typeof kakaoAdditionalInfoRequestSchema>;
+
+export const kakaoDevAuthSuccessSchema = z.object({
+  action: z.enum(['login', 'signup']),
+  member: z.object({
+    memberId: z.string().min(1),
+    kakaoUserId: z.string().min(1),
+    email: z.string().email().optional(),
+    phone: z.string().min(1).optional(),
+    displayName: z.string().min(1),
+    status: z.literal('active'),
+  }),
+  session: z.object({ kind: z.literal('dev-session'), accessToken: z.string().min(1), memberId: z.string().min(1) }),
+});
+export type KakaoDevAuthSuccess = z.infer<typeof kakaoDevAuthSuccessSchema>;
+
+export const kakaoAuthContinueRequestSchema = z.object({ outcomeId: z.string().uuid() });
+export type KakaoAuthContinueRequest = z.infer<typeof kakaoAuthContinueRequestSchema>;
+
+export const kakaoAuthBlockedSchema = z.object({
+  action: z.literal('blocked'),
+  reason: z.string().min(1),
+  message: z.string().min(1).optional(),
+}).strict();
+export type KakaoAuthBlocked = z.infer<typeof kakaoAuthBlockedSchema>;
+
+export const kakaoLogoutSuccessSchema = z.object({
+  action: z.literal('logout'),
+}).strict();
+export type KakaoLogoutSuccess = z.infer<typeof kakaoLogoutSuccessSchema>;
+
+export const kakaoUnlinkSuccessSchema = z.object({
+  action: z.literal('unlink'),
+}).strict();
+export type KakaoUnlinkSuccess = z.infer<typeof kakaoUnlinkSuccessSchema>;
+
+export const kakaoSessionActionResponseSchema = z.union([
+  kakaoLogoutSuccessSchema,
+  kakaoUnlinkSuccessSchema,
+  kakaoAuthBlockedSchema,
+]);
+export type KakaoSessionActionResponse = z.infer<typeof kakaoSessionActionResponseSchema>;
+
+export const kakaoAdditionalInfoRequiredSchema = z.object({
+  action: z.literal('additional_info_required'), reason: z.string().min(1).optional(), continuationToken: z.string().uuid().optional(), next: z.string().min(1).optional(),
+});
+export const kakaoAuthCallbackRedirectSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('auth_complete'), outcomeId: z.string().uuid() }),
+  kakaoAdditionalInfoRequiredSchema,
+  kakaoAuthBlockedSchema,
+]);
+export type KakaoAuthCallbackRedirect = z.infer<typeof kakaoAuthCallbackRedirectSchema>;
+
 export const supportChannelSchema = z.literal('oneToOneInquiry');
 
 export const participantProfileSchema = z.object({
