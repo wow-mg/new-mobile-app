@@ -12,3 +12,9 @@ test('runtime export points at built JavaScript, not TypeScript source', () => {
   assert.equal(rootExport.types, './src/index.ts');
 });
 
+test('POOL+KO fixture has a stable package subpath export', () => {
+  assert.deepEqual(packageJson.exports?.['./fixtures/pool-ko'], {
+    types: './src/fixtures/pool-ko.ts',
+    import: './dist/fixtures/pool-ko.js',
+  });
+});

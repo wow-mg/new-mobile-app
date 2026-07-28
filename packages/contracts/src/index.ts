@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export * from './pool-ko.js';
+
 export const COUNTER_INCREMENT = 1;
 
 export const counterEventSchema = z.object({

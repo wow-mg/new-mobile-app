@@ -23,6 +23,10 @@
     "./fixtures/refund": {
       "types": "./src/fixtures/refund.ts",
       "import": "./dist/fixtures/refund.js"
+    },
+    "./fixtures/pool-ko": {
+      "types": "./src/fixtures/pool-ko.ts",
+      "import": "./dist/fixtures/pool-ko.js"
     }
   },
   "files": [

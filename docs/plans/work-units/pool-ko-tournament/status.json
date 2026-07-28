@@ -1,0 +1,36 @@
+{
+  "work_unit_id": "pool-ko-tournament",
+  "title": "POOL+KO tournament generation and publication",
+  "status": "ready_for_execution",
+  "source": {
+    "type": "workboard",
+    "id": "e283defc-d297-4ed1-8207-99d3e96bbd55",
+    "description": "Room-986 Product/Planning frozen POOL+KO rules captured 2026-07-28 15:01 KST"
+  },
+  "current_stage": "03-contract-api",
+  "ready_for_execution": true,
+  "next_action": {
+    "owner_role": "Backend/API Integrator",
+    "workboard_card_id": "e8f59168-0d89-46fb-9012-d9a38d102b27",
+    "summary": "Implement POOL+KO deterministic pure engine and schema/contract packet from Product/Planning design artifact",
+    "input_artifact": "docs/plans/work-units/pool-ko-tournament/00-product-planning/pool-ko-design-packet.md",
+    "expected_output_artifacts": [
+      "shared contracts or DTO stubs for POOL+KO",
+      "pure engine functions",
+      "unit and contract tests",
+      "Backend/API evidence summary"
+    ]
+  },
+  "human_gates": {
+    "production_release": "closed",
+    "provider_console": "closed",
+    "live_money": "closed",
+    "failed_gate_risk_acceptance": "closed",
+    "secret_bearing_config": "closed"
+  },
+  "evidence_ladder": {
+    "required_level": "contract-and-unit-test",
+    "qa_applicability": "backend contract/unit evidence first; Admin UI and Participant App QA after DTO handoff"
+  },
+  "updated_at": "2026-07-28T19:20:00+09:00"
+}
