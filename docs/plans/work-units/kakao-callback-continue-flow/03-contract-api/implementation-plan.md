@@ -1,0 +1,22 @@
+# Kakao Callback Success Continuation — API Contract Plan
+
+- Work unit: `kakao-callback-continue-flow`; guard `7e9bffb1-9691-4c12-a2ab-c0283a7b7a62`.
+- Consuming flow/owner: mobile Kakao callback on `/`, followed by `/signup-complete` for signup or `/tournaments` for login; Backend/API Integrator owns the contract and Mobile App Dev consumes it.
+- Existing endpoints: `GET /auth/kakao` and `GET /auth/kakao/callback`; direct callbacks without a consumed, valid state keep their structured JSON behavior.
+- New endpoint: `POST /auth/kakao/continue`.
+- Redirect contract: `kakaoAuthCallbackRedirectSchema` accepts only `{ action: 'auth_complete', outcomeId: UUID }` for success, the shared additional-info result, or the shared blocked result.
+- Continue request: `kakaoAuthContinueRequestSchema` with one opaque UUID `outcomeId`.
+- Continue success: existing `kakaoDevAuthSuccessSchema` (`login` or `signup`, member, dev-session); direct callback success uses the same schema.
+- Error contract: `kakaoAuthBlockedSchema` with bounded reasons including `AUTH_OUTCOME_NOT_PENDING`; invalid, expired, or reused outcomes fail closed with `409`.
+- Other callback result: `kakaoAdditionalInfoRequiredSchema`; provider/callback error JSON remains bounded and shared if touched by this implementation.
+- Auth/session behavior: a valid OAuth state binds the allowlisted app return. On signup/login the API stores the already-issued dev success in an in-memory, one-time, ten-minute outcome map and redirects only `action=auth_complete&outcomeId=<uuid>`. Mobile POSTs that identifier once and receives the dev success. No OAuth code, provider/access/session token, bearer token, or member PII is placed in the redirect URL or logged/persisted as evidence.
+- Retry/error behavior: outcome consumption is one-shot; expired/reused/unknown IDs return the shared blocked error. Network failure before a successful response may be retried only while the outcome remains pending; successful consumption deletes it.
+- Contract SoT/type impact: all request, success, additional-info, blocked, and callback redirect schemas/types live in `packages/contracts/src/index.ts`; API and mobile import them rather than declaring duplicates.
+- Fixtures/tests: `packages/contracts/__tests__/kakao-auth-contract.test.mjs`, `apps/api/src/routes/__tests__/kakao-auth.test.ts`, and `apps/mobile/src/app/__tests__/home.test.tsx`.
+- Compatibility: direct/no-state JSON is preserved. Existing additional-info endpoint and its real mobile client remain compatible.
+- Migration: none; storage is dev/sandbox in-memory only.
+- Rollback: remove `POST /auth/kakao/continue`, its outcome map, and new shared schemas; restore state-bound success to the prior behavior. This would restore the known NO_GO and is not a completion path.
+- Runtime smoke/evidence: requested targeted contract build/test, API test, mobile Jest tests, `git diff --check`, and `.evidence/kakao-login-complete-20260722/result.md`.
+- Reviewers: `wm-contract-reviewer` for plan/checkpoint/final, `wm-implementation-reviewer` for consuming mobile behavior, and routing-required `po-planning-reviewer` final readiness.
+- Non-goals/human gates: no persistent production auth/session store, database migration, provider console, secrets, live OAuth smoke, dependency install, deploy/release, push, PR, merge, or external changes.
+- Completion requires scoped `git diff`, full `git status --short`, command outcomes, and reviewer evidence.

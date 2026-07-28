@@ -1,0 +1,36 @@
+{
+  "schema": "codex-role-workflow/v1",
+  "status": "ready",
+  "resolved_role": "Product/Planning",
+  "entry_case": "modification_request",
+  "request_source": "Room 986, 조원영, 2026-07-21 15:36 KST",
+  "workboard_card": "82a20cff-2c17-4e65-b090-f992059d5316",
+  "routing_reason": "Frontend privacy policy draft must include Kakao permission-requested profile fields in the membership/signup collection purpose with required/optional condition. This is a bounded text/code update, not external submission or legal approval.",
+  "allowed_repo_local_codex_skills": ["mobile-app-dev-workflow"],
+  "required_reviewers": ["wm-implementation-reviewer", "po-planning-reviewer"],
+  "durable_artifact_stage": "00-product-planning",
+  "codex_interactive_required": true,
+  "codex_execution_contract": "/workspace/skills/codex-interactive-repo-work/SKILL.md",
+  "human_gate": {
+    "active_blocker": false,
+    "notes": "Legal/privacy final approval and external Kakao permission application remain human-owned; this routing allows draft frontend policy text update only."
+  },
+  "scope": [
+    "Confirm the frontend privacy policy route/link source.",
+    "Update the frontend privacy policy text only.",
+    "Add 성별, 연령대, 생일, 출생 연도 under membership/signup collected items.",
+    "Mark added fields as optional unless existing approved product flow clearly requires mandatory collection.",
+    "Preserve existing draft/legal caveats and avoid unrelated changes."
+  ],
+  "non_goals": [
+    "No external Kakao permission application submission.",
+    "No production deploy, release, or store submission.",
+    "No final legal approval claim.",
+    "No backend/API schema or data collection implementation unless required for consistency checks."
+  ],
+  "process_sot": [
+    "/workspace/skills/codex-role-workflow/SKILL.md",
+    "/workspace/skills/codex-interactive-repo-work/SKILL.md",
+    "/workspace/WORKFLOW.md"
+  ]
+}

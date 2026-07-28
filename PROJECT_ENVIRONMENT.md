@@ -138,7 +138,7 @@ Public JS runtime variables are parsed by `apps/mobile/env.ts`; app config varia
   - `EXPO_PUBLIC_API_URL`: required URL.
 - Public app config variables:
   - `EXPO_PUBLIC_APP_SLUG`: required by preview, production, and EAS build config.
-  - `EXPO_PUBLIC_APP_SCHEME`: required by preview, production, and EAS build config.
+  - `EXPO_PUBLIC_APP_SCHEME`: required by preview, production, and EAS build config; the dev API also uses the same value to allowlist Kakao callback deep-link returns.
   - `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`: required.
   - `EXPO_PUBLIC_ANDROID_PACKAGE`: required.
 - Non-public variables:
@@ -179,6 +179,16 @@ Do not hardcode customer app names, bundle IDs, API URLs, tokens, or credentials
   - `DATABASE_URL`: required URL.
   - `API_PORT`: integer, default `3000`.
   - `API_BEARER_TOKEN`: required secret.
+  - `PAYMENT_PROVIDER_ENV`: optional sandbox payment runtime selector; only
+    `sandbox` or `dev-staging` is accepted.
+  - `PAYMENT_PROVIDER_BASE_URL`: optional provider URL supplied through private
+    runtime configuration.
+  - `PAYMENT_PROVIDER_MERCHANT_ID`: optional private merchant identifier.
+  - `PAYMENT_PROVIDER_SECRET`: optional private provider credential.
+  - Payment provider values are secret-injected for sandbox/dev-staging only.
+    They must not be exposed through `EXPO_PUBLIC_*`, logs, committed files, or
+    API responses. Production payment configuration and live payment proof are
+    outside the current repo-local scope.
 - Import direction remains routes to services to db only.
 - Shared API/domain schemas must come from `packages/contracts`.
 - Current Railway QA deployment:
