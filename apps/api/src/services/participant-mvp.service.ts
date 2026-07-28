@@ -449,6 +449,23 @@ export async function getTournamentApplication(applicationId: string) {
   return parseApplicationRow(application);
 }
 
+export async function getPaymentApplicationContext(applicationId: string) {
+  const application = await getTournamentApplication(applicationId);
+  const division = useMemoryStore
+    ? sandboxDivisions.find((item) => item.divisionId === application.divisionId)
+    : application.divisionId
+      ? parseDivisionRow((await db.select().from(tournamentDivisions).where(eq(tournamentDivisions.divisionId, application.divisionId)).limit(1))[0])
+      : undefined;
+
+  if (!division) throw new ParticipantMvpError(APPLICATION_NOT_FOUND_ERROR, 404);
+  return {
+    applicationId: application.applicationId,
+    participantId: application.participantId,
+    amount: division.entryFeeKrw,
+    currency: 'KRW' as const,
+  };
+}
+
 export async function requestParticipantSelfCancel(applicationId: string) {
   await getTournamentApplication(applicationId);
   throw new ParticipantMvpError(SELF_CANCEL_DISABLED_ERROR, 400);
