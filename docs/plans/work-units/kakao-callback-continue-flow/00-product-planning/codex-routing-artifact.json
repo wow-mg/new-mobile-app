@@ -1,0 +1,39 @@
+{
+  "schema": "codex-role-workflow/v1",
+  "status": "ready",
+  "resolved_role": "Product/Planning",
+  "entry_case": "issue_bug_failure",
+  "request_source": "Room 986, 조원영, 2026-07-21 15:41 KST",
+  "workboard_card": "d423cfd0-ae61-4b3c-9b95-0ddb6d055655",
+  "routing_reason": "Kakao OAuth callback currently leaves the user on a raw JSON response page instead of continuing into the frontend/app signup or signed-in flow. This is a bounded auth flow bug fix with frontend/backend impact.",
+  "allowed_repo_local_codex_skills": ["mobile-app-dev-workflow", "mobile-backend-api-integrator-workflow"],
+  "required_reviewers": ["wm-implementation-reviewer", "wm-contract-reviewer", "po-planning-reviewer"],
+  "durable_artifact_stage": "00-product-planning",
+  "codex_interactive_required": true,
+  "codex_execution_contract": "/workspace/skills/codex-interactive-repo-work/SKILL.md",
+  "human_gate": {
+    "active_blocker": false,
+    "deployment_blocked_until_command_approval": true,
+    "notes": "Development and local validation may proceed. Railway/EAS/store/production deploy or external Kakao console changes require a separate exact-command approval after diff and validation are reviewed."
+  },
+  "scope": [
+    "Inspect current Kakao auth frontend and API callback flow without printing request-provided OAuth codes, session tokens, or secrets.",
+    "Fix the flow so callback success continues to the app/frontend signup/login route rather than ending on raw JSON.",
+    "Preserve dev-session behavior if used for development, but return/redirect in a user-continuation-friendly way.",
+    "Add or update narrow tests for Kakao callback redirect/continuation behavior.",
+    "Also complete the pending privacy-policy-kakao-profile-fields text update if not already done, because it blocks Kakao permission readiness."
+  ],
+  "non_goals": [
+    "No deployment until exact command approval.",
+    "No external Kakao console setting changes.",
+    "No production submit, store release, or EAS release action.",
+    "No token/code/session value logging or echoing."
+  ],
+  "process_sot": [
+    "/workspace/skills/codex-role-workflow/SKILL.md",
+    "/workspace/skills/codex-interactive-repo-work/SKILL.md",
+    "/usr/lib/node_modules/openclaw/skills/coding-agent/SKILL.md",
+    "/workspace/WORKFLOW.md"
+  ],
+  "wrapper_fallback_reason": "codex-run wrapper dry-run passed, but PTY launch from this OpenClaw exec environment failed preflight with pty_capable_terminal_required. Raw codex exec is used as a supervised fallback for code generation only; external deployment remains blocked."
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "human-gate/v1",
+  "gate_id": "payment-money-movement",
+  "category": "payment-money-movement",
+  "decision": "approved",
+  "scope": "Sandbox/test-mode Inisis payment order creation, status read, and reconcile/refund API implementation (source + tests) in apps/api and packages/contracts for work unit 40754bdd-be47-4977-a8af-9fb2e60bebb2. No production keys, no live charge, no real money movement.",
+  "decided_by": {
+    "name": "조원영",
+    "contact": "room-986",
+    "channel": "room-986 chat"
+  },
+  "decision_reference": "https://github.com/wow-mg/new-mobile-app/issues/1#issuecomment-5087874197",
+  "decided_at": "2026-07-27T05:35:00.000Z",
+  "residual_risk": [
+    "Production Inisis merchant contract, live keys, and real charge/refund proof remain unapproved and out of scope.",
+    "Retry-on-failure policy is explicitly deferred by the human owner; do not hardcode a retry cadence.",
+    "Inisis test/sandbox credentials are stored only as memory_secret pointer msp_a39dfcfd4bbdb934cbc00042; provider client must read via secret injection, never literal values."
+  ],
+  "evidence_links": [
+    ".evidence/wm/40754bdd-be47-4977-a8af-9fb2e60bebb2/plan-review-blocked.md",
+    "docs/plans/work-units/40754bdd-be47-4977-a8af-9fb2e60bebb2/03-contract-api/implementation-plan.md"
+  ]
+}

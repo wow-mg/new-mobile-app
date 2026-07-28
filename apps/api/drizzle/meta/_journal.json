@@ -8,6 +8,48 @@
       "when": 1780801359933,
       "tag": "0000_bitter_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783927085930,
+      "tag": "0001_volatile_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783927791059,
+      "tag": "0002_striped_selene",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784712950899,
+      "tag": "0003_lethal_domino",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785134009316,
+      "tag": "0004_payment_provider_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785154405455,
+      "tag": "0005_goofy_mercury",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785213171246,
+      "tag": "0006_public_roulette",
+      "breakpoints": true
     }
   ]
 }

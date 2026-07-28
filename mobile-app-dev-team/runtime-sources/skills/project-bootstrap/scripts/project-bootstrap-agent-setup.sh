@@ -785,6 +785,13 @@ expo_mcp_auth_status="missing"
 if command -v codex >/dev/null 2>&1; then
   if codex mcp get expo 2> >(redact >&2) | grep -Eiq 'authenticated|connected|authorized|ready'; then
     expo_mcp_auth_status="available"
+  elif codex mcp list 2> >(redact >&2) | awk '
+    BEGIN { in_expo = 0 }
+    /^Name[[:space:]]+Url[[:space:]]+/ { in_expo = 1; next }
+    in_expo && /^expo[[:space:]]/ && $0 ~ /enabled/ && $0 ~ /OAuth/ { found = 1 }
+    END { exit(found ? 0 : 1) }
+  '; then
+    expo_mcp_auth_status="available"
   fi
 fi
 

@@ -14,12 +14,12 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~56.0.15",
+    "@expo/metro-runtime": "~56.0.16",
     "@template/contracts": "workspace:*",
-    "expo": "~56.0.11",
-    "expo-dev-client": "~56.0.20",
-    "expo-linking": "~56.0.14",
-    "expo-router": "~56.2.10",
+    "expo": "~56.0.15",
+    "expo-dev-client": "~56.0.22",
+    "expo-linking": "~56.0.15",
+    "expo-router": "~56.2.14",
     "nativewind": "5.0.0-preview.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",

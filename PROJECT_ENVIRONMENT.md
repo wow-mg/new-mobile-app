@@ -1,6 +1,6 @@
 # Project Environment
 
-Last updated: 2026-06-19
+Last updated: 2026-07-12
 
 This file is the root source for the current project environment and runtime settings. Keep it in sync when changing package versions, Expo config, NativeWind config, Codex runtime files, CI gates, EAS workflows, required environment variables, or the Codex MCP/CLI setup guide at `docs/CODEX_MCP_ENVIRONMENT.md`.
 
@@ -25,13 +25,13 @@ This file is the root source for the current project environment and runtime set
 - App path: `apps/mobile`.
 - Framework: Expo SDK 56 with Expo Router.
 - Runtime versions:
-  - `expo`: `~56.0.11`
+  - `expo`: `~56.0.15`
   - `react`: `19.2.3`
   - `react-dom`: `19.2.3`
   - `react-native`: `0.85.3`
   - `react-native-web`: `^0.21.2`
-  - `expo-router`: `~56.2.10`
-  - `expo-dev-client`: `~56.0.20`
+  - `expo-router`: `~56.2.14`
+  - `expo-dev-client`: `~56.0.22`
   - `expo-doctor`: `^1.19.9` as the `doctor` script dependency.
   - `@playwright/test`: `^1.60.0` as the browser E2E test runner.
 - Expo config: `apps/mobile/app.config.ts`.
@@ -75,9 +75,9 @@ This file is the root source for the current project environment and runtime set
 - Playwright launches Expo Web with deterministic public test config plus the caller-provided backend API URL when present:
   - `EAS_BUILD=false`
   - `EXPO_PUBLIC_APP_ENV=development`
-  - `EXPO_PUBLIC_APP_DISPLAY_NAME=Mobile App Template`
-  - `EXPO_PUBLIC_APP_SLUG=mobile-app-template`
-  - `EXPO_PUBLIC_APP_SCHEME=mobileapptemplate`
+  - `EXPO_PUBLIC_APP_DISPLAY_NAME=Happickle`
+  - `EXPO_PUBLIC_APP_SLUG=happickle-mobile`
+  - `EXPO_PUBLIC_APP_SCHEME=happickle`
   - `EXPO_PUBLIC_API_URL` from the command environment, or `http://127.0.0.1:65535` as a local UI-only placeholder when no API URL is supplied
   - `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER=com.template.mobile`
   - `EXPO_PUBLIC_ANDROID_PACKAGE=com.template.mobile`
@@ -134,15 +134,16 @@ Public JS runtime variables are parsed by `apps/mobile/env.ts`; app config varia
 
 - Public JS runtime variables:
   - `EXPO_PUBLIC_APP_ENV`: `development`, `preview`, or `production`; default `development`.
-  - `EXPO_PUBLIC_APP_DISPLAY_NAME`: optional in the runtime parser, default is `Mobile App Template`; required explicitly by preview, production, and EAS build config.
+  - `EXPO_PUBLIC_APP_DISPLAY_NAME`: optional in the runtime parser, default is `Happickle`; required explicitly by preview, production, and EAS build config.
   - `EXPO_PUBLIC_API_URL`: required URL.
 - Public app config variables:
   - `EXPO_PUBLIC_APP_SLUG`: required by preview, production, and EAS build config.
-  - `EXPO_PUBLIC_APP_SCHEME`: required by preview, production, and EAS build config.
+  - `EXPO_PUBLIC_APP_SCHEME`: required by preview, production, and EAS build config; the dev API also uses the same value to allowlist Kakao callback deep-link returns.
   - `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`: required.
   - `EXPO_PUBLIC_ANDROID_PACKAGE`: required.
 - Non-public variables:
   - `EAS_PROJECT_ID`: optional UUID.
+  - `SERVICE_NATIVE_APP_KEY`, `SERVICE_REST_API_KEY`, and `SERVICE_JAVASCRIPT_KEY`: optional Kakao provider configuration inputs. `app.config.ts` exposes only key-presence booleans through `extra.socialLogin.kakao`; it never places these values in Expo extras. Presence does not mean live OAuth is ready.
 Do not hardcode customer app names, bundle IDs, API URLs, tokens, or credentials.
 
 ## EAS And Maestro
@@ -178,6 +179,16 @@ Do not hardcode customer app names, bundle IDs, API URLs, tokens, or credentials
   - `DATABASE_URL`: required URL.
   - `API_PORT`: integer, default `3000`.
   - `API_BEARER_TOKEN`: required secret.
+  - `PAYMENT_PROVIDER_ENV`: optional sandbox payment runtime selector; only
+    `sandbox` or `dev-staging` is accepted.
+  - `PAYMENT_PROVIDER_BASE_URL`: optional provider URL supplied through private
+    runtime configuration.
+  - `PAYMENT_PROVIDER_MERCHANT_ID`: optional private merchant identifier.
+  - `PAYMENT_PROVIDER_SECRET`: optional private provider credential.
+  - Payment provider values are secret-injected for sandbox/dev-staging only.
+    They must not be exposed through `EXPO_PUBLIC_*`, logs, committed files, or
+    API responses. Production payment configuration and live payment proof are
+    outside the current repo-local scope.
 - Import direction remains routes to services to db only.
 - Shared API/domain schemas must come from `packages/contracts`.
 - Current Railway QA deployment:
