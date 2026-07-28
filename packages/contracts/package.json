@@ -11,6 +11,18 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./dist/index.js"
+    },
+    "./fixtures/payment": {
+      "types": "./src/fixtures/payment.ts",
+      "import": "./dist/fixtures/payment.js"
+    },
+    "./fixtures/payment-provider-webhook": {
+      "types": "./src/fixtures/payment-provider-webhook.ts",
+      "import": "./dist/fixtures/payment-provider-webhook.js"
+    },
+    "./fixtures/refund": {
+      "types": "./src/fixtures/refund.ts",
+      "import": "./dist/fixtures/refund.js"
     }
   },
   "files": [
