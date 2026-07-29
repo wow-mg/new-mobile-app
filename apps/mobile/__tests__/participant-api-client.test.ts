@@ -114,6 +114,79 @@ describe('participant API client', () => {
     }));
   });
 
+  it('calls participant payment status and refund-review endpoints with shared contract parsing', async () => {
+    const paymentOrder = {
+      paymentRecordId: 'payment_api_card_001',
+      applicationId: application.applicationId,
+      paymentMode: 'card' as const,
+      status: 'orderCreated' as const,
+      providerOrderId: 'order_api_001',
+      providerStatus: 'created' as const,
+      amount: 60000,
+      currency: 'KRW' as const,
+      createdAt: '2026-07-29T01:00:00.000Z',
+      updatedAt: '2026-07-29T01:00:00.000Z',
+    };
+    const refundRequest = {
+      refundRequestId: 'refund_api_001',
+      paymentRecordId: paymentOrder.paymentRecordId,
+      applicationId: application.applicationId,
+      status: 'operatorReview' as const,
+      policyDecision: 'fullRefund' as const,
+      applicationStatus: 'cancellationRequested' as const,
+      paymentStatus: 'refundRequested' as const,
+      paidAmountKrw: 60000,
+      requestedAmountKrw: 60000,
+      currency: 'KRW' as const,
+      reason: 'Schedule conflict',
+      requestedAt: '2026-07-29T01:03:00.000Z',
+      updatedAt: '2026-07-29T01:03:00.000Z',
+      history: [{
+        refundHistoryId: 'refund_history_001',
+        event: 'requested' as const,
+        actorKind: 'customer' as const,
+        refundStatus: 'operatorReview' as const,
+        applicationStatus: 'cancellationRequested' as const,
+        paymentStatus: 'refundRequested' as const,
+        amountKrw: 60000,
+        currency: 'KRW' as const,
+        message: 'Refund request received for operator review.',
+        createdAt: '2026-07-29T01:03:00.000Z',
+      }],
+    };
+    const fetchImpl = jest.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/api/payments/orders') && init?.method === 'POST') return jsonResponse(paymentOrder, { status: 201 });
+      if (url.endsWith('/api/payments/payment_api_card_001') && init?.method === 'GET') {
+        return jsonResponse({ ...paymentOrder, status: 'paid', providerStatus: 'paid' });
+      }
+      if (url.endsWith('/api/payments/payment_api_card_001/refunds') && init?.method === 'POST') {
+        return jsonResponse(refundRequest, { status: 201 });
+      }
+      if (url.endsWith('/api/payments/payment_api_card_001/refunds') && init?.method === 'GET') {
+        return jsonResponse({ refundRequest });
+      }
+      return jsonResponse({ error: 'PAYMENT_RECORD_NOT_FOUND' }, { status: 404 });
+    }) as unknown as typeof fetch;
+    const client = createParticipantApiClient({
+      baseUrl: 'https://api.example.invalid',
+      bearerToken: 'test-token',
+      fetchImpl,
+    });
+
+    await expect(client.createPaymentOrder({
+      applicationId: application.applicationId,
+      paymentMode: 'card',
+      amount: 60000,
+      currency: 'KRW',
+      idempotencyKey: 'mobile:application_api_001:payment-order',
+    })).resolves.toMatchObject({ status: 'orderCreated', providerOrderId: 'order_api_001' });
+    await expect(client.getPaymentStatus(paymentOrder.paymentRecordId)).resolves.toMatchObject({ status: 'paid' });
+    await expect(client.requestRefund(paymentOrder.paymentRecordId, { reason: 'Schedule conflict' })).resolves.toMatchObject({ status: 'operatorReview' });
+    await expect(client.getRefundHistory(paymentOrder.paymentRecordId)).resolves.toMatchObject({
+      refundRequest: { status: 'operatorReview' },
+    });
+  });
+
   it('surfaces API application policy errors before falling back to generic HTTP status', async () => {
     const duprRequiredFetch = jest.fn(async () => jsonResponse({ error: participantApplicationErrorCodeSchema.enum.DUPR_PROFILE_REQUIRED }, { status: 400 })) as unknown as typeof fetch;
     const duprRequiredClient = createParticipantApiClient({ baseUrl: 'https://api.example.invalid', bearerToken: 'test-token', fetchImpl: duprRequiredFetch });
