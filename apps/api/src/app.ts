@@ -18,12 +18,19 @@ import { operationalRequestLogger } from './routes/ops-readiness.js';
 import { paymentsRoute } from './routes/payments.js';
 import { paymentProviderWebhookRoute } from './routes/payment-provider-webhook.js';
 import { Env } from './env.js';
+import { consumeParticipantDevSession } from './services/participant-session.service.js';
 
 const apiBearerTokens = [Env.API_BEARER_TOKEN, Env.PARTICIPANT_PREVIEW_BEARER_TOKEN].filter(
   (token): token is string => Boolean(token),
 );
 const generalApiBearerAuth = bearerAuth({ token: apiBearerTokens });
 const roleScopedPath = /^\/api\/(?:payments(?:\/|$)|admin(?:\/|$))/;
+function isParticipantDevSessionRequest(method: string, path: string) {
+  if ((method === 'GET' || method === 'PATCH') && path === '/api/participant/profile') return true;
+  if (method === 'GET' && path === '/api/participant/mypage') return true;
+  if (method === 'POST' && path === '/api/tournament-applications') return true;
+  return method === 'GET' && /^\/api\/tournament-applications\/[^/]+$/.test(path);
+}
 
 const allowedCorsOrigins = [
   'https://picklehub-mobile-dev-production.up.railway.app',
@@ -58,6 +65,15 @@ export const app = new Hono()
     if (roleScopedPath.test(c.req.path)) {
       await next();
       return;
+    }
+    if (isParticipantDevSessionRequest(c.req.method, c.req.path)) {
+      const auth = consumeParticipantDevSession(c.req.header('authorization'));
+      if (auth) {
+        (c as unknown as { set: (key: string, value: string) => void })
+          .set('participantId', auth.session.participantId);
+        await next();
+        return;
+      }
     }
     return generalApiBearerAuth(c, next);
   })  // participant refunds/admin own role-specific auth; other API routes use the general bearer gate

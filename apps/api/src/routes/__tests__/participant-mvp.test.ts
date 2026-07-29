@@ -12,6 +12,10 @@ import {
 } from '@template/contracts';
 import { app } from '../../app.js';
 import { resetParticipantMvpState } from '../../services/participant-mvp.service.js';
+import {
+  issueParticipantDevSession,
+  resetParticipantDevSessions,
+} from '../../services/participant-session.service.js';
 
 const authHeaders = { authorization: 'Bearer test' };
 
@@ -26,6 +30,108 @@ async function requestJson(path: string, init?: RequestInit) {
 describe('participant MVP dev-preview endpoints', () => {
   beforeEach(async () => {
     await resetParticipantMvpState();
+    resetParticipantDevSessions();
+  });
+
+  it('allows an issued participant dev session only across the participant application/mypage bridge', async () => {
+    const session = issueParticipantDevSession({
+      memberId: 'member-participant-bridge',
+      kakaoUserId: 'kakao-participant-bridge',
+      providerAccessToken: 'provider-test-fixture',
+    });
+    const devSessionHeaders = {
+      authorization: `Bearer ${session.accessToken}`,
+      'content-type': 'application/json',
+    };
+
+    const profile = await app.request('/api/participant/profile', {
+      headers: devSessionHeaders,
+    });
+    expect(profile.status).toBe(200);
+
+    const updated = await app.request('/api/participant/profile', {
+      method: 'PATCH',
+      headers: devSessionHeaders,
+      body: JSON.stringify({ duprId: 'DUPR-BRIDGE' }),
+    });
+    expect(updated.status).toBe(200);
+
+    const created = await app.request('/api/tournament-applications', {
+      method: 'POST',
+      headers: devSessionHeaders,
+      body: JSON.stringify({
+        tournamentId: 'tournament_sandbox_001',
+        participantId: 'participant-forged',
+      }),
+    });
+    expect(created.status).toBe(201);
+    const application = tournamentApplicationSchema.parse(await created.json());
+    expect(application.participantId).toBe('participant_sandbox_001');
+
+    const fetched = await app.request(`/api/tournament-applications/${application.applicationId}`, {
+      headers: devSessionHeaders,
+    });
+    expect(fetched.status).toBe(200);
+
+    const myPage = await app.request('/api/participant/mypage', {
+      headers: devSessionHeaders,
+    });
+    expect(myPage.status).toBe(200);
+    expect(myPageResponseSchema.parse(await myPage.json())).toMatchObject({
+      applications: [{ participantId: 'participant_sandbox_001' }],
+      paymentRecords: [{
+        applicationId: application.applicationId,
+        participantId: 'participant_sandbox_001',
+        paymentMode: 'operatorManagedOffline',
+        status: 'notStartedSandbox',
+      }],
+    });
+
+    const deleteAttempt = await app.request(`/api/tournament-applications/${application.applicationId}`, {
+      method: 'DELETE',
+      headers: devSessionHeaders,
+    });
+    expect(deleteAttempt.status).toBe(401);
+
+    for (const path of [
+      '/api/participant/support',
+      '/api/participant/notifications',
+      '/api/participant/games',
+    ]) {
+      const denied = await app.request(path, { headers: devSessionHeaders });
+      expect(denied.status).toBe(401);
+    }
+
+    const invalid = await app.request('/api/participant/mypage', {
+      headers: { authorization: 'Bearer invalid-participant-session' },
+    });
+    expect(invalid.status).toBe(401);
+  });
+
+  it('hides another participant application from a participant dev session', async () => {
+    await requestJson('/api/participant/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ duprId: 'DUPR-OWNER' }),
+    });
+    const created = await requestJson('/api/tournament-applications', {
+      method: 'POST',
+      body: JSON.stringify({
+        tournamentId: 'tournament_sandbox_001',
+        participantId: 'participant-other',
+      }),
+    });
+    const application = tournamentApplicationSchema.parse(created.body);
+    const session = issueParticipantDevSession({
+      memberId: 'member-participant-owner-check',
+      kakaoUserId: 'kakao-participant-owner-check',
+      providerAccessToken: 'provider-test-fixture',
+    });
+
+    const fetched = await app.request(`/api/tournament-applications/${application.applicationId}`, {
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+
+    expect(fetched.status).toBe(404);
   });
 
   it('answers browser preflight requests before bearer auth for the deployed mobile origin', async () => {

@@ -41,16 +41,21 @@ export const tournamentsRoute = new Hono()
     }
   });
 
-export const participantProfileRoute = new Hono()
+export const participantProfileRoute = new Hono<{ Variables: { participantId?: string } }>()
   .get('/', async (c) => c.json(await getParticipantProfile()))
   .patch('/', zValidator('json', updateParticipantProfileRequestSchema), async (c) =>
     c.json(await updateParticipantDupr(c.req.valid('json').duprId)),
   );
 
-export const tournamentApplicationsRoute = new Hono()
+export const tournamentApplicationsRoute = new Hono<{ Variables: { participantId?: string } }>()
   .post('/', zValidator('json', createTournamentApplicationRequestSchema), async (c) => {
     try {
-      return c.json(await createTournamentApplication(c.req.valid('json')), 201);
+      const input = c.req.valid('json');
+      const participantId = c.get('participantId');
+      return c.json(await createTournamentApplication({
+        ...input,
+        ...(participantId ? { participantId } : {}),
+      }), 201);
     } catch (error) {
       const mapped = mapParticipantMvpError(error);
       return c.json(mapped.body, mapped.status);
@@ -58,7 +63,10 @@ export const tournamentApplicationsRoute = new Hono()
   })
   .get('/:applicationId', async (c) => {
     try {
-      return c.json(await getTournamentApplication(c.req.param('applicationId')));
+      return c.json(await getTournamentApplication(
+        c.req.param('applicationId'),
+        c.get('participantId'),
+      ));
     } catch (error) {
       const mapped = mapParticipantMvpError(error);
       return c.json(mapped.body, mapped.status);
@@ -83,7 +91,7 @@ export const supportRoute = new Hono()
 export const notificationsRoute = new Hono()
   .get('/', async (c) => c.json(await listNotifications()));
 
-export const myPageRoute = new Hono()
+export const myPageRoute = new Hono<{ Variables: { participantId?: string } }>()
   .get('/', async (c) => c.json(await getMyPage()));
 
 export const gamesRoute = new Hono()

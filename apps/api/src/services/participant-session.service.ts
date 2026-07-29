@@ -8,6 +8,7 @@ type ParticipantDevSession = {
   participantId: string;
   kakaoUserId: string;
   providerAccessToken: string;
+  paymentProviderAccess: boolean;
   expiresAt: number;
 };
 
@@ -23,12 +24,14 @@ export function issueParticipantDevSession(input: {
   memberId: string;
   kakaoUserId: string;
   providerAccessToken: string;
+  paymentProviderAccess?: boolean;
 }) {
   cleanup();
   const accessToken = randomUUID();
   sessions.set(accessToken, {
     ...input,
     participantId: SANDBOX_PARTICIPANT_ID,
+    paymentProviderAccess: input.paymentProviderAccess ?? false,
     expiresAt: Date.now() + DEV_SESSION_TTL_MS,
   });
   return { kind: 'dev-session' as const, accessToken, memberId: input.memberId };
