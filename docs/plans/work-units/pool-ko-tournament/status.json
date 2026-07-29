@@ -3,41 +3,39 @@
   "work_unit_id": "pool-ko-tournament",
   "title": "POOL+KO tournament generation and publication",
   "stage": "04-mobile-app",
-  "state": "planned",
+  "state": "done",
   "owner_role": "Mobile App Dev",
   "attempt": 1,
-  "status": "ready_for_execution",
+  "status": "done",
   "source": {
     "type": "workboard",
     "id": "e283defc-d297-4ed1-8207-99d3e96bbd55",
     "description": "Room-986 Product/Planning frozen POOL+KO rules captured 2026-07-28 15:01 KST"
   },
   "current_stage": "04-mobile-app",
-  "ready_for_execution": true,
+  "ready_for_execution": false,
   "next_action": {
-    "owner_role": "Mobile App Dev",
-    "workboard_card_ids": [
-      "72a99dfe-9568-4d2f-a469-4196ef4a389f",
-      "d4aa9401-565a-4e09-9335-05a3a7f1b4e0"
-    ],
-    "summary": "Implement POOL+KO Admin generation/review/lock/publish flow and participant bracket/schedule display flow from merged Backend/API DTO contract",
+    "owner_role": "QA/Release",
+    "workboard_card_ids": [],
+    "summary": "Plan QA/Release evidence for the completed route-free POOL+KO Admin harness and future shipped UI/API integration",
     "input_artifacts": [
       "docs/plans/work-units/pool-ko-tournament/00-product-planning/pool-ko-design-packet.md",
       "docs/plans/work-units/pool-ko-tournament/03-contract-api/backend-api-evidence.md",
-      "packages/contracts/src/pool-ko.ts"
+      "packages/contracts/src/pool-ko.ts",
+      "docs/plans/work-units/pool-ko-tournament/04-mobile-app/implementation-evidence.md",
+      "docs/plans/work-units/pool-ko-tournament/04-mobile-app/final-review.md"
     ],
     "expected_output_artifacts": [
-      "Admin UI flow implementation evidence",
-      "Participant app display implementation evidence",
-      "mobile tests for pool/KO states, bye/withdrawal rendering, and personal schedule rendering",
-      "QA/Release handoff summary"
+      "QA/Release evidence plan",
+      "Admin UI route/API persistence/PDF generation follow-up scope if product-approved",
+      "release-risk summary before any production release"
     ]
   },
   "reviewer": {
     "required": true,
-    "status": "pending",
+    "status": "passed",
     "agent": "wm-implementation-reviewer",
-    "evidence": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/jest-resolver-fix-evidence.md"
+    "evidence": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/final-review.md"
   },
   "human_gates": [],
   "evidence": [
@@ -50,13 +48,22 @@
       "kind": "contract-evidence"
     },
     {
-      "path": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/jest-resolver-fix-evidence.md",
-      "kind": "test-evidence"
+      "path": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/implementation-evidence.md",
+      "kind": "implementation-evidence"
+    },
+    {
+      "path": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/final-review.md",
+      "kind": "review-evidence"
     }
   ],
+  "evidence_ladder": {
+    "required_level": "L0",
+    "achieved_level": "L0",
+    "qa_applicability": "route-free Admin logic/test harness complete; shipped Admin UI, API persistence, PDF generation, and QA/Release evidence remain follow-up before release"
+  },
   "handoff": {
-    "next_role": "Mobile App Dev",
-    "next_artifact": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/"
+    "next_role": "QA/Release",
+    "next_artifact": "docs/plans/work-units/pool-ko-tournament/05-qa-release/README.md"
   },
   "human_gate_boundaries": {
     "production_release": "closed",
@@ -64,10 +71,6 @@
     "live_money": "closed",
     "failed_gate_risk_acceptance": "closed",
     "secret_bearing_config": "closed"
-  },
-  "evidence_ladder": {
-    "required_level": "L0",
-    "qa_applicability": "backend contract/unit evidence first; Admin UI and Participant App QA after DTO handoff"
   },
   "events": [
     {
@@ -93,7 +96,25 @@
       "at": "2026-07-28T22:37:00+09:00",
       "actor": "Product/Planning",
       "action": "updated status artifact to wu-status/v1 before Railway development deployment gate recheck"
+    },
+    {
+      "seq": 5,
+      "at": "2026-07-29T10:22:00+09:00",
+      "actor": "Mobile App Dev",
+      "action": "implementation-started"
+    },
+    {
+      "seq": 6,
+      "at": "2026-07-29T12:08:00+09:00",
+      "actor": "Mobile App Dev",
+      "action": "mobile-app-done"
+    },
+    {
+      "seq": 7,
+      "at": "2026-07-29T14:39:00+09:00",
+      "actor": "Product/Planning",
+      "action": "resolved PR rebase status conflict after Room 986 merge approval while preserving closed human gates"
     }
   ],
-  "updated_at": "2026-07-28T22:37:00+09:00"
+  "updated_at": "2026-07-29T14:39:00+09:00"
 }
