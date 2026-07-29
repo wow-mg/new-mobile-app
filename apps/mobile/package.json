@@ -59,7 +59,8 @@
     ],
     "moduleNameMapper": {
       "^@template/contracts$": "<rootDir>/../../packages/contracts/src/index.ts",
-      "^\\./pool-ko\\.js$": "<rootDir>/../../packages/contracts/src/pool-ko.ts"
+      "^\\./pool-ko\\.js$": "<rootDir>/../../packages/contracts/src/pool-ko.ts",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     }
   }
 }

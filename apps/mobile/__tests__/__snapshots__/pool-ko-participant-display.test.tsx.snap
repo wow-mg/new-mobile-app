@@ -1,0 +1,1941 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`POOL+KO participant published display flow captures the participant bracket snapshot for pool and KO published states 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#f7faf8",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "alignSelf": "center",
+        "gap": 16,
+        "maxWidth": 480,
+        "padding": 20,
+        "paddingBottom": 112,
+        "width": "100%",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#f7faf8",
+        "flex": 1,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "alignItems": "flex-start",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "paddingBottom": 10,
+            "paddingTop": 16,
+          }
+        }
+      >
+        <View>
+          <View
+            accessibilityLabel="메인으로 이동"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+          >
+            <Image
+              accessibilityLabel="Happickle"
+              resizeMode="contain"
+              source={
+                {
+                  "testUri": "../../../../worktrees/pool-ko-participant/apps/mobile/assets/happickle_logo.png",
+                }
+              }
+              style={
+                {
+                  "height": 40,
+                  "width": 126,
+                }
+              }
+              testID="header-logo"
+            />
+          </View>
+          <Text
+            style={
+              {
+                "alignSelf": "flex-start",
+                "backgroundColor": "#eaf6d7",
+                "borderRadius": 999,
+                "color": "#2f7d4b",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 12,
+                "fontWeight": "800",
+                "marginTop": 6,
+                "overflow": "hidden",
+                "paddingHorizontal": 10,
+                "paddingVertical": 5,
+              }
+            }
+          >
+            대한피클볼협회 공식
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#dfeee2",
+              "borderRadius": 999,
+              "height": 42,
+              "justifyContent": "center",
+              "width": 42,
+            }
+          }
+          testID="header-bell"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 20,
+                "fontWeight": "900",
+              }
+            }
+          >
+            ♧
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 18,
+            "paddingBottom": 2,
+          }
+        }
+        testID="bracket-screen"
+      >
+        <View
+          style={
+            {
+              "backgroundColor": "#e9f1ea",
+              "borderRadius": 28,
+              "gap": 12,
+              "overflow": "hidden",
+              "padding": 18,
+            }
+          }
+          testID="bracket-hero"
+        >
+          <Text
+            style={
+              {
+                "color": "#2f7d4b",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 13,
+                "fontWeight": "900",
+              }
+            }
+          >
+            POOL+KO
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 28,
+                "fontWeight": "900",
+                "lineHeight": 34,
+              }
+            }
+          >
+            공개 대진표 · 일정
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#6b7280",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 13,
+                "lineHeight": 19,
+              }
+            }
+          >
+            게시된 부문만 참가자에게 표시됩니다. 점수 입력과 운영자 수정은 제공하지 않습니다.
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="pool-ko-division-list"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            부문 목록
+          </Text>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "alignSelf": "flex-start",
+                  "backgroundColor": "#eaf6d7",
+                  "borderRadius": 999,
+                  "color": "#2f7d4b",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 12,
+                  "fontWeight": "900",
+                  "overflow": "hidden",
+                  "paddingHorizontal": 10,
+                  "paddingVertical": 5,
+                }
+              }
+            >
+              게시
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              오픈 혼합복식 · POOL+KO
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              예선 풀 1개 · 상위 2팀 본선 진출
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              공개됨 · 잠금 완료 · 참가자 조회 가능
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="pool-standings"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            예선 풀 순위
+          </Text>
+          <View
+            style={
+              {
+                "alignItems": "flex-start",
+                "borderBottomColor": "#eef2ee",
+                "borderBottomWidth": 1,
+                "gap": 3,
+                "paddingBottom": 10,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              1위 · 김민준 / 이서연
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "fontWeight": "800",
+                  "lineHeight": 22,
+                }
+              }
+            >
+              2승 0패 · 득실 20
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "alignItems": "flex-start",
+                "borderBottomColor": "#eef2ee",
+                "borderBottomWidth": 1,
+                "gap": 3,
+                "paddingBottom": 10,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              2위 · 박지훈 / 정수빈
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "fontWeight": "800",
+                  "lineHeight": 22,
+                }
+              }
+            >
+              1승 1패 · 득실 1
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "alignItems": "flex-start",
+                "borderBottomColor": "#eef2ee",
+                "borderBottomWidth": 1,
+                "gap": 3,
+                "paddingBottom": 10,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              3위 · 윤태옥 / 조성민
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "fontWeight": "800",
+                  "lineHeight": 22,
+                }
+              }
+            >
+              0승 1패 · 득실 -6
+            </Text>
+          </View>
+          <Text
+            style={
+              {
+                "color": "#6b7280",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 13,
+                "lineHeight": 19,
+              }
+            }
+          >
+            순위는 입력된 점수와 몰수 처리 결과에서 파생됩니다.
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="pool-match-list"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            예선 경기
+          </Text>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="pool-match-card"
+          >
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              김민준 / 이서연 vs 박지훈 / 정수빈
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              Pool POOL-A · Round 1
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              15:10
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="pool-match-card"
+          >
+            <Text
+              style={
+                {
+                  "alignSelf": "flex-start",
+                  "backgroundColor": "#eaf6d7",
+                  "borderRadius": 999,
+                  "color": "#2f7d4b",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 12,
+                  "fontWeight": "900",
+                  "overflow": "hidden",
+                  "paddingHorizontal": 10,
+                  "paddingVertical": 5,
+                }
+              }
+            >
+              기권
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              김민준 / 이서연 vs 최현우 / 송지민 (기권)
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              Pool POOL-A · Round 2
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              부상 기권 · 잔여 경기 몰수 처리
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="pool-match-card"
+          >
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              윤태옥 / 조성민 vs BYE
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              Pool POOL-A · Round 3
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              부전승으로 다음 라운드 진출
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="ko-bracket-view"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            본선 KO 브라켓 · 8강
+          </Text>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="ko-match-card"
+          >
+            <Text
+              style={
+                {
+                  "alignSelf": "flex-start",
+                  "backgroundColor": "#eaf6d7",
+                  "borderRadius": 999,
+                  "color": "#2f7d4b",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 12,
+                  "fontWeight": "900",
+                  "overflow": "hidden",
+                  "paddingHorizontal": 10,
+                  "paddingVertical": 5,
+                }
+              }
+            >
+              BYE
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              김민준 / 이서연 vs BYE
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              KO 1R · 1위 / BYE
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              부전승으로 다음 라운드 진출
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="ko-match-card"
+          >
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              박지훈 / 정수빈 vs 윤태옥 / 조성민
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              KO 1R · 2위 / 3위
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              경기 예정
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="personal-schedule"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            내 경기 일정
+          </Text>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="personal-schedule-card"
+          >
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              김민준 / 이서연 vs 박지훈 / 정수빈
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              예선 · pool-a · 1라운드
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              15:10
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="personal-schedule-card"
+          >
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              김민준 / 이서연 vs 최현우 / 송지민 (기권)
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              예선 · pool-a · 2라운드
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              부상 기권 · 잔여 경기 몰수 처리
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+            testID="personal-schedule-card"
+          >
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              김민준 / 이서연 vs BYE
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              본선 KO · 1라운드
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              부전승으로 다음 라운드 진출
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="bracket-final-card"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            결승
+          </Text>
+          <View
+            style={
+              {
+                "backgroundColor": "#f9fafb",
+                "borderColor": "#eef2ee",
+                "borderRadius": 18,
+                "borderWidth": 1,
+                "gap": 6,
+                "padding": 14,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "alignSelf": "flex-start",
+                  "backgroundColor": "#eaf6d7",
+                  "borderRadius": 999,
+                  "color": "#2f7d4b",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 12,
+                  "fontWeight": "900",
+                  "overflow": "hidden",
+                  "paddingHorizontal": 10,
+                  "paddingVertical": 5,
+                }
+              }
+            >
+              우승
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 17,
+                  "fontWeight": "900",
+                }
+              }
+            >
+              결승 진출팀 미정
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 15,
+                  "lineHeight": 22,
+                }
+              }
+            >
+              8월 9일 · 센터코트
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                  "fontSize": 13,
+                  "lineHeight": 19,
+                }
+              }
+            >
+              우승 팀은 결승 종료 후 공개됩니다
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#e5e7eb",
+              "borderRadius": 22,
+              "borderWidth": 1,
+              "gap": 12,
+              "padding": 16,
+            }
+          }
+          testID="print-pdf-links"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 18,
+                "fontWeight": "900",
+              }
+            }
+          >
+            인쇄/PDF
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#2f7d4b",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 14,
+                "fontWeight": "900",
+              }
+            }
+          >
+            대진표 PDF 보기
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#2f7d4b",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 14,
+                "fontWeight": "900",
+              }
+            }
+          >
+            개인 일정 인쇄
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#6b7280",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 13,
+                "lineHeight": 19,
+              }
+            }
+          >
+            링크는 게시된 대진과 일정 조회 전용입니다.
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#ffffff",
+            "borderColor": "#e5e7eb",
+            "borderRadius": 24,
+            "borderWidth": 1,
+            "gap": 12,
+            "padding": 18,
+          }
+        }
+        testID="deferred-reference-screens"
+      >
+        <Text
+          style={
+            {
+              "color": "#2f7d4b",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "900",
+            }
+          }
+        >
+          운영 예정 기능
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#6b7280",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "lineHeight": 19,
+            }
+          }
+        >
+          결제 · 환불 · 대진표 · 점수 입력 · 결과 확정은 운영자 안내에 따라 순차적으로 제공됩니다.
+        </Text>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#ffffff",
+        "borderColor": "#e5e7eb",
+        "borderRadius": 0,
+        "borderWidth": 1,
+        "bottom": 0,
+        "flexDirection": "row",
+        "justifyContent": "space-around",
+        "left": 0,
+        "paddingVertical": 14,
+        "position": "absolute",
+        "right": 0,
+      }
+    }
+    testID="bottom-nav"
+  >
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          false,
+        ]
+      }
+      testID="bottom-tab-explore"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            false,
+          ]
+        }
+      >
+        탐색
+      </Text>
+    </View>
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          {
+            "backgroundColor": "#eaf6d7",
+          },
+        ]
+      }
+      testID="bottom-tab-games"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            {
+              "color": "#2f7d4b",
+            },
+          ]
+        }
+      >
+        내 경기
+      </Text>
+    </View>
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          false,
+        ]
+      }
+      testID="bottom-tab-notifications"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            false,
+          ]
+        }
+      >
+        알림
+      </Text>
+    </View>
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          false,
+        ]
+      }
+      testID="bottom-tab-mypage"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            false,
+          ]
+        }
+      >
+        마이
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`POOL+KO participant published display flow keeps the existing app games route compatible while bracket route owns POOL+KO details 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#f7faf8",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "alignSelf": "center",
+        "gap": 16,
+        "maxWidth": 480,
+        "padding": 20,
+        "paddingBottom": 112,
+        "width": "100%",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#f7faf8",
+        "flex": 1,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "alignItems": "flex-start",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "paddingBottom": 10,
+            "paddingTop": 16,
+          }
+        }
+      >
+        <View>
+          <View
+            accessibilityLabel="메인으로 이동"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+          >
+            <Image
+              accessibilityLabel="Happickle"
+              resizeMode="contain"
+              source={
+                {
+                  "testUri": "../../../../worktrees/pool-ko-participant/apps/mobile/assets/happickle_logo.png",
+                }
+              }
+              style={
+                {
+                  "height": 40,
+                  "width": 126,
+                }
+              }
+              testID="header-logo"
+            />
+          </View>
+          <Text
+            style={
+              {
+                "alignSelf": "flex-start",
+                "backgroundColor": "#eaf6d7",
+                "borderRadius": 999,
+                "color": "#2f7d4b",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 12,
+                "fontWeight": "800",
+                "marginTop": 6,
+                "overflow": "hidden",
+                "paddingHorizontal": 10,
+                "paddingVertical": 5,
+              }
+            }
+          >
+            대한피클볼협회 공식
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#dfeee2",
+              "borderRadius": 999,
+              "height": 42,
+              "justifyContent": "center",
+              "width": 42,
+            }
+          }
+          testID="header-bell"
+        >
+          <Text
+            style={
+              {
+                "color": "#1f2937",
+                "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+                "fontSize": 20,
+                "fontWeight": "900",
+              }
+            }
+          >
+            ♧
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#e9f1ea",
+            "borderRadius": 28,
+            "gap": 12,
+            "overflow": "hidden",
+            "padding": 18,
+          }
+        }
+        testID="games-layout-hero"
+      >
+        <Text
+          style={
+            {
+              "color": "#2f7d4b",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "900",
+            }
+          }
+        >
+          내 경기
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 28,
+              "fontWeight": "900",
+              "lineHeight": 34,
+            }
+          }
+        >
+          신청한 경기 일정
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#6b7280",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "lineHeight": 19,
+            }
+          }
+        >
+          접수된 대회와 결제 상태를 한눈에 확인하세요.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#ffffff",
+            "borderColor": "#e5e7eb",
+            "borderRadius": 22,
+            "borderWidth": 1,
+            "gap": 12,
+            "padding": 16,
+          }
+        }
+        testID="my-games-screen"
+      >
+        <Text
+          style={
+            {
+              "color": "#6b7280",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "lineHeight": 19,
+            }
+          }
+          testID="games-empty"
+        >
+          아직 표시할 경기 일정이 없습니다. 대회 신청이 접수되면 여기에 표시됩니다.
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#6b7280",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "lineHeight": 19,
+            }
+          }
+        >
+          점수 입력 · 결과 확정 · 대진표 운영은 운영자 안내 후 순차적으로 제공됩니다.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#ffffff",
+            "borderColor": "#e5e7eb",
+            "borderRadius": 24,
+            "borderWidth": 1,
+            "gap": 12,
+            "padding": 18,
+          }
+        }
+        testID="deferred-reference-screens"
+      >
+        <Text
+          style={
+            {
+              "color": "#2f7d4b",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "900",
+            }
+          }
+        >
+          운영 예정 기능
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#6b7280",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "lineHeight": 19,
+            }
+          }
+        >
+          결제 · 환불 · 대진표 · 점수 입력 · 결과 확정은 운영자 안내에 따라 순차적으로 제공됩니다.
+        </Text>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#ffffff",
+        "borderColor": "#e5e7eb",
+        "borderRadius": 0,
+        "borderWidth": 1,
+        "bottom": 0,
+        "flexDirection": "row",
+        "justifyContent": "space-around",
+        "left": 0,
+        "paddingVertical": 14,
+        "position": "absolute",
+        "right": 0,
+      }
+    }
+    testID="bottom-nav"
+  >
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          false,
+        ]
+      }
+      testID="bottom-tab-explore"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            false,
+          ]
+        }
+      >
+        탐색
+      </Text>
+    </View>
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          {
+            "backgroundColor": "#eaf6d7",
+          },
+        ]
+      }
+      testID="bottom-tab-games"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            {
+              "color": "#2f7d4b",
+            },
+          ]
+        }
+      >
+        내 경기
+      </Text>
+    </View>
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          false,
+        ]
+      }
+      testID="bottom-tab-notifications"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            false,
+          ]
+        }
+      >
+        알림
+      </Text>
+    </View>
+    <View
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "borderRadius": 999,
+            "paddingHorizontal": 12,
+            "paddingVertical": 8,
+          },
+          false,
+        ]
+      }
+      testID="bottom-tab-mypage"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#1f2937",
+              "fontFamily": "Noto Sans KR, Inter, SF Pro Display, system-ui, sans-serif",
+              "fontSize": 13,
+              "fontWeight": "800",
+            },
+            false,
+          ]
+        }
+      >
+        마이
+      </Text>
+    </View>
+  </View>
+</View>
+`;

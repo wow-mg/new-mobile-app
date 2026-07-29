@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactN
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ExpoLinking from 'expo-linking';
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { kakaoAuthCallbackRedirectSchema, type ParticipantGame, type ParticipantNotification, type PaymentRecord, type SupportCenterResponse, type SupportInquiry, type Tournament, type TournamentDivision } from '@template/contracts';
+import { kakaoAuthCallbackRedirectSchema, type ParticipantGame, type ParticipantNotification, type PaymentRecord, type SupportCenterResponse, type SupportInquiry, type PoolKoMatch, type PoolKoSnapshot, type Tournament, type TournamentDivision } from '@template/contracts';
 import {
   type MockTournamentApplication,
   type MockTournament,
@@ -1105,26 +1105,73 @@ export function PartnerDeclinedScreen() {
   return <InviteTerminalScreen testID="partner-declined-screen" heroTestID="partner-declined-hero" eyebrow="초대 결과" title="이서연님이 초대를 거절했어요" caption="다른 파트너를 초대하거나 참가를 취소할 수 있어요" />;
 }
 
-const bracketRounds = [
-  { title: '8강', matches: [
-    ['8월 9일 · 코트 1', '김민준/이서연 vs 박지훈/정수빈', '11:7, 9:11, 11:8 · 승리'],
-    ['8월 9일 · 코트 2', '최현우/송지민 vs 윤태옥/조성민', '11:5, 11:9 · 승리'],
-    ['8월 9일 · 코트 3', '강태양/이하늘 vs 정우진/한소미', '9:11, 11:6, 8:11 · 승리'],
-    ['8월 9일 · 코트 4', '배수현/오지훈 vs 신동엽/유아름', '11:4, 11:9 · 승리'],
-  ] },
-  { title: '4강', matches: [
-    ['8월 9일 · 코트 1', '김민준/이서연 vs 최현우/송지민', '11:6, 11:8 · 승리'],
-    ['8월 9일 · 코트 2', '강태양/이하늘 vs 배수현/오지훈', '11:9, 9:11, 11:7 · 승리'],
-  ] },
-] as const;
+const participantPoolKoSnapshot: PoolKoSnapshot = {
+  division: {
+    divisionId: 'division-open-mixed', format: 'POOL_KO', status: 'published', kPerPool: { value: 2, source: 'default' },
+    poolScoringConfig: { bestOfGames: 1, gamesToWin: 1, pointsToWin: 15, winBy: 2 }, koScoringConfig: { bestOfGames: 3, gamesToWin: 2, pointsToWin: 11, winBy: 2 },
+    withdrawalRule: 'preserve_played_default_remaining', publicDrawPolicy: 'explicit_audited_resolution', lockState: { isLocked: true, reviewCompletedAt: '2026-07-28T10:00:00.000Z', lockedAt: '2026-07-28T10:05:00.000Z', lockedBy: 'operator-1' },
+    publishState: { isPublished: true, publishedAt: '2026-07-28T10:10:00.000Z', publishedBy: 'operator-1' },
+  },
+  entrants: [
+    { entrantId: 'team-kim-lee', teamId: 'team-kim-lee', displayName: '김민준 / 이서연', seed: 1, originalDivisionId: 'division-open-mixed', withdrawalStatus: 'active' },
+    { entrantId: 'team-park-jung', teamId: 'team-park-jung', displayName: '박지훈 / 정수빈', seed: 2, originalDivisionId: 'division-open-mixed', withdrawalStatus: 'active' },
+    { entrantId: 'team-choi-song', teamId: 'team-choi-song', displayName: '최현우 / 송지민', seed: 3, originalDivisionId: 'division-open-mixed', withdrawalStatus: 'withdrawn' },
+    { entrantId: 'team-yoon-cho', teamId: 'team-yoon-cho', displayName: '윤태옥 / 조성민', seed: 4, originalDivisionId: 'division-open-mixed', withdrawalStatus: 'active' },
+  ],
+  pools: [{ poolId: 'pool-a', divisionId: 'division-open-mixed', label: 'A', order: 0, entrantIds: ['team-kim-lee', 'team-park-jung', 'team-choi-song', 'team-yoon-cho'], roundRobinMatchIds: ['pool-a-1', 'pool-a-2', 'pool-a-3'] }],
+  matches: [
+    { matchId: 'pool-a-1', divisionId: 'division-open-mixed', stage: 'pool', poolId: 'pool-a', round: 1, slots: [{ slotId: 'p1h', entrantId: 'team-kim-lee', state: 'assigned' }, { slotId: 'p1a', entrantId: 'team-park-jung', state: 'assigned' }], scoreState: 'completed', games: [{ homeScore: 15, awayScore: 10 }] },
+    { matchId: 'pool-a-2', divisionId: 'division-open-mixed', stage: 'pool', poolId: 'pool-a', round: 2, slots: [{ slotId: 'p2h', entrantId: 'team-kim-lee', state: 'assigned' }, { slotId: 'p2a', withdrawnEntrantId: 'team-choi-song', state: 'withdrawn' }], scoreState: 'defaulted', games: [], defaultMetadata: { defaultedEntrantId: 'team-choi-song', reason: '부상 기권', auditEventId: 'audit-withdrawal' } },
+    { matchId: 'pool-a-3', divisionId: 'division-open-mixed', stage: 'pool', poolId: 'pool-a', round: 3, slots: [{ slotId: 'p3h', entrantId: 'team-yoon-cho', state: 'assigned' }, { slotId: 'p3a', state: 'bye' }], scoreState: 'scheduled', games: [] },
+    { matchId: 'ko-1', divisionId: 'division-open-mixed', stage: 'ko', round: 1, slots: [{ slotId: 'k1h', entrantId: 'team-kim-lee', state: 'assigned', source: { kind: 'pool_rank', poolId: 'pool-a', rank: 1 } }, { slotId: 'k1a', state: 'bye' }], scoreState: 'scheduled', games: [] },
+    { matchId: 'ko-2', divisionId: 'division-open-mixed', stage: 'ko', round: 1, slots: [{ slotId: 'k2h', entrantId: 'team-park-jung', state: 'assigned', source: { kind: 'pool_rank', poolId: 'pool-a', rank: 2 } }, { slotId: 'k2a', entrantId: 'team-yoon-cho', state: 'assigned', source: { kind: 'pool_rank', poolId: 'pool-a', rank: 3 } }], scoreState: 'scheduled', games: [] },
+  ],
+  standings: [
+    { poolId: 'pool-a', entrantId: 'team-kim-lee', rank: 1, wins: 2, losses: 0, gameDifferential: 2, pointDifferential: 20, headToHead: { applied: false, opponentEntrantIds: [] }, tieStatus: 'resolved', derivedFromMatchIds: ['pool-a-1', 'pool-a-2'] },
+    { poolId: 'pool-a', entrantId: 'team-park-jung', rank: 2, wins: 1, losses: 1, gameDifferential: 0, pointDifferential: 1, headToHead: { applied: true, opponentEntrantIds: ['team-yoon-cho'] }, tieStatus: 'resolved', derivedFromMatchIds: ['pool-a-1'] },
+    { poolId: 'pool-a', entrantId: 'team-yoon-cho', rank: 3, wins: 0, losses: 1, gameDifferential: -1, pointDifferential: -6, headToHead: { applied: true, opponentEntrantIds: ['team-park-jung'] }, tieStatus: 'resolved', derivedFromMatchIds: [] },
+  ],
+  koBracket: { divisionId: 'division-open-mixed', bracketSize: 4, rematchAvoidanceStatus: 'avoided', rounds: [{ round: 1, matches: [] }] },
+  auditEvents: [{ auditEventId: 'audit-withdrawal', divisionId: 'division-open-mixed', type: 'withdrawal_applied', actorId: 'operator-1', occurredAt: '2026-07-28T11:00:00.000Z', entrantId: 'team-choi-song', reason: '부상 기권', stateAtEvent: 'published' }],
+  permissions: { operator: { canGenerate: true, canReview: true, canLock: true, canPublish: true, canResolvePublicDraw: true, canAdjustAssignmentsWithReason: true }, courtStaff: { canEnterScore: true }, participant: { canViewPublished: true } },
+};
+
+function entrantName(snapshot: PoolKoSnapshot, entrantId?: string) {
+  if (!entrantId) return 'BYE';
+  return snapshot.entrants.find((entrant) => entrant.entrantId === entrantId)?.displayName ?? entrantId;
+}
+
+function slotLabel(snapshot: PoolKoSnapshot, match: PoolKoMatch, slotIndex: 0 | 1) {
+  const slot = match.slots[slotIndex];
+  if (slot.state === 'bye') return 'BYE';
+  if (slot.state === 'withdrawn') return `${entrantName(snapshot, slot.withdrawnEntrantId)} (기권)`;
+  if (slot.state === 'tbd') return '상대 미정';
+  return entrantName(snapshot, slot.entrantId);
+}
+
+function matchCaption(match: PoolKoMatch) {
+  if (match.scoreState === 'completed') return match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(', ');
+  if (match.scoreState === 'defaulted') return `${match.defaultMetadata?.reason ?? '기권'} · 잔여 경기 몰수 처리`;
+  return match.slots.some((slot) => slot.state === 'bye') ? '부전승으로 다음 라운드 진출' : '경기 예정';
+}
 
 export function BracketScreen() {
+  const snapshot = participantPoolKoSnapshot;
+  const poolMatches = snapshot.matches.filter((match) => match.stage === 'pool');
+  const koMatches = snapshot.matches.filter((match) => match.stage === 'ko');
+  const myMatches = snapshot.matches.filter((match) => match.slots.some((slot) => slot.entrantId === 'team-kim-lee' || slot.withdrawnEntrantId === 'team-kim-lee'));
+
   return (
     <ParticipantRouteScaffold active="games">
       <View testID="bracket-screen" style={styles.heroCard}>
-        <PageHero testID="bracket-hero" eyebrow="토너먼트" title="대진표" caption="2026 협회장배 전국오픈 · 남자복식" />
-        {bracketRounds.map((round) => <View key={round.title} style={styles.sectionCard}><Text style={styles.sectionTitleSmall}>{round.title}</Text>{round.matches.map(([date, teams, result]) => <StatusListCard key={`${date}-${teams}`} title={teams} meta={date} caption={result} />)}</View>)}
-        <InfoCard testID="bracket-final-card" title="결승"><StatusListCard title="김민준/이서연 vs 강태양/이하늘" meta="8월 9일 · 센터코트" caption="11:8, 9:11, 11:6 · 우승" badgeText="우승" /></InfoCard>
+        <PageHero testID="bracket-hero" eyebrow="POOL+KO" title="공개 대진표 · 일정" caption="게시된 부문만 참가자에게 표시됩니다. 점수 입력과 운영자 수정은 제공하지 않습니다." />
+        <InfoCard testID="pool-ko-division-list" title="부문 목록"><StatusListCard title="오픈 혼합복식 · POOL+KO" meta="예선 풀 1개 · 상위 2팀 본선 진출" caption="공개됨 · 잠금 완료 · 참가자 조회 가능" badgeText="게시" /></InfoCard>
+        <InfoCard testID="pool-standings" title="예선 풀 순위">{snapshot.standings.map((standing) => <InfoListItem key={standing.entrantId} label={`${standing.rank}위 · ${entrantName(snapshot, standing.entrantId)}`} value={`${standing.wins}승 ${standing.losses}패 · 득실 ${standing.pointDifferential}`} />)}<Text style={styles.caption}>순위는 입력된 점수와 몰수 처리 결과에서 파생됩니다.</Text></InfoCard>
+        <InfoCard testID="pool-match-list" title="예선 경기">{poolMatches.map((match) => <StatusListCard key={match.matchId} testID="pool-match-card" title={`${slotLabel(snapshot, match, 0)} vs ${slotLabel(snapshot, match, 1)}`} meta={`Pool ${match.poolId?.toUpperCase()} · Round ${match.round}`} caption={matchCaption(match)} badgeText={match.scoreState === 'defaulted' ? '기권' : undefined} />)}</InfoCard>
+        <InfoCard testID="ko-bracket-view" title="본선 KO 브라켓 · 8강">{koMatches.map((match) => <StatusListCard key={match.matchId} testID="ko-match-card" title={`${slotLabel(snapshot, match, 0)} vs ${slotLabel(snapshot, match, 1)}`} meta={`KO ${match.round}R · ${match.slots.map((slot) => slot.source?.rank ? `${slot.source.rank}위` : slot.state.toUpperCase()).join(' / ')}`} caption={matchCaption(match)} badgeText={match.slots.some((slot) => slot.state === 'bye') ? 'BYE' : undefined} />)}</InfoCard>
+        <InfoCard testID="personal-schedule" title="내 경기 일정">{myMatches.map((match) => <StatusListCard key={match.matchId} testID="personal-schedule-card" title={`${slotLabel(snapshot, match, 0)} vs ${slotLabel(snapshot, match, 1)}`} meta={match.stage === 'pool' ? `예선 · ${match.poolId} · ${match.round}라운드` : `본선 KO · ${match.round}라운드`} caption={matchCaption(match)} />)}</InfoCard>
+        <InfoCard testID="bracket-final-card" title="결승"><StatusListCard title="결승 진출팀 미정" meta="8월 9일 · 센터코트" caption="우승 팀은 결승 종료 후 공개됩니다" badgeText="우승" /></InfoCard>
+        <InfoCard testID="print-pdf-links" title="인쇄/PDF"><Text style={styles.linkText}>대진표 PDF 보기</Text><Text style={styles.linkText}>개인 일정 인쇄</Text><Text style={styles.caption}>링크는 게시된 대진과 일정 조회 전용입니다.</Text></InfoCard>
       </View>
     </ParticipantRouteScaffold>
   );
