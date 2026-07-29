@@ -174,7 +174,7 @@ describe('participant shell sandbox contract', () => {
     expect(screen.getByTestId('payment-screen')).toHaveTextContent(/결제 안내/);
     expect(screen.getByTestId('payment-order-summary')).toHaveTextContent(/60,000원/);
     expect(screen.getByTestId('payment-method')).toHaveTextContent(/운영자 오프라인 확인/);
-    expect(screen.getByTestId('payment-local-notice')).toHaveTextContent(/이 화면에서는 결제가 진행되지 않습니다/);
+    expect(screen.getByTestId('payment-local-notice')).toHaveTextContent(/실시간 PG나 외부 결제 제공자를 사용하지 않습니다/);
     fireEvent.press(screen.getByTestId('payment-support-button'));
     expect(mockPush).toHaveBeenLastCalledWith('/support');
   });
