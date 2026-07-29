@@ -170,6 +170,7 @@ function issueDevSession(member: KakaoMember, providerAccessToken: string) {
     memberId: member.memberId,
     kakaoUserId: member.kakaoUserId,
     providerAccessToken,
+    paymentProviderAccess: true,
   });
 }
 

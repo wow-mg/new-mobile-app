@@ -379,6 +379,48 @@ describe('Kakao OAuth dev initiation route', () => {
     expect(await continued.json()).toMatchObject({ action: 'signup', member: { kakaoUserId: 'dev-web-cors' } });
   });
 
+  it('authorizes a normal Kakao-issued dev mobile session for sandbox payment orders', async () => {
+    process.env.SERVICE_REST_API_KEY = 'placeholder-rest-key';
+    process.env.EXPO_PUBLIC_APP_SCHEME = 'happickle';
+    mockKakaoFetch({ id: 'dev-payment-mobile', email: 'payment-mobile@example.invalid', nickname: '결제모바일' });
+    const { app } = await loadApp();
+    const { resetParticipantMvpState, updateParticipantDupr, createTournamentApplication } = await import('../../services/participant-mvp.service.js');
+    const { resetPaymentState } = await import('../../services/payment.service.js');
+    await resetParticipantMvpState();
+    await resetPaymentState();
+    await updateParticipantDupr('DUPR-PAYMENT');
+    await createTournamentApplication({ tournamentId: 'tournament_sandbox_001' });
+
+    const start = await app.request('/auth/kakao?returnTo=happickle%3A%2F%2F%2F', { redirect: 'manual' });
+    const state = new URL(start.headers.get('location') ?? '').searchParams.get('state');
+    const callback = await app.request(`/auth/kakao/callback?code=payment-dev&state=${encodeURIComponent(state ?? '')}`, { redirect: 'manual' });
+    const outcomeId = new URL(callback.headers.get('location') ?? '').searchParams.get('outcomeId');
+    const continued = await app.request('/auth/kakao/continue', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ outcomeId }),
+    });
+    const login = await continued.json() as { session: { accessToken: string } };
+
+    const order = await app.request('/api/payments/orders', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${login.session.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        applicationId: 'application_tournament_sandbox_001_participant_sandbox_001',
+        paymentMode: 'card',
+        amount: 60000,
+        currency: 'KRW',
+        idempotencyKey: 'kakao-mobile-session-payment-order',
+      }),
+    });
+
+    expect(continued.status).toBe(201);
+    expect(order.status).toBe(201);
+  });
+
   it('does not allow untrusted origins to continue Kakao auth outcomes through CORS', async () => {
     const { app } = await loadApp();
     const preflight = await app.request('/auth/kakao/continue', {
