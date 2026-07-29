@@ -78,7 +78,7 @@ exports[`POOL+KO participant published display flow captures the participant bra
               resizeMode="contain"
               source={
                 {
-                  "testUri": "../../../../worktrees/pool-ko-participant/apps/mobile/assets/happickle_logo.png",
+                  "testUri": "<asset:happickle_logo.png>",
                 }
               }
               style={
@@ -1489,7 +1489,7 @@ exports[`POOL+KO participant published display flow keeps the existing app games
               resizeMode="contain"
               source={
                 {
-                  "testUri": "../../../../worktrees/pool-ko-participant/apps/mobile/assets/happickle_logo.png",
+                  "testUri": "<asset:happickle_logo.png>",
                 }
               }
               style={

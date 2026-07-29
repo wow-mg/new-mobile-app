@@ -2,6 +2,11 @@ import React from 'react';
 import { cleanup, render, screen } from '@testing-library/react-native';
 import { BracketScreen, GamesScreen, resetParticipantFlow, startParticipantSession } from '../src/app';
 
+expect.addSnapshotSerializer({
+  test: (value) => typeof value === 'string' && value.endsWith('/assets/happickle_logo.png'),
+  print: () => '"<asset:happickle_logo.png>"',
+});
+
 jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({})),
   router: { push: jest.fn() },
