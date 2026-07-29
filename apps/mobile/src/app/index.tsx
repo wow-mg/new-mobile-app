@@ -166,7 +166,19 @@ function primeKakaoDevSession(result: Extract<KakaoCallbackResult, { action: 'lo
     memberId: result.session?.memberId,
     displayName: result.member?.displayName,
   };
-  patchParticipantState({ persistedKakaoDevSession, socialSessionStarted: true });
+  const accessToken = result.session?.accessToken;
+  if (accessToken) {
+    participantApi = createParticipantApiClient({
+      ...getParticipantApiConfigFromPublicEnv(),
+      bearerToken: accessToken,
+      applicationBridgeOnly: true,
+    });
+  }
+  patchParticipantState({
+    persistedKakaoDevSession,
+    socialSessionStarted: true,
+    apiMode: participantApi.enabled ? 'api' : participantState.apiMode,
+  });
 }
 
 function useParticipantFlow() {
@@ -202,7 +214,8 @@ export function startParticipantSession() {
     })
     .catch(() => patchParticipantState({ apiMode: 'fallback' }));
 
-  hydrateParticipantUtilityPages();
+  if (participantApi.applicationBridgeOnly) refreshParticipantPaymentStatus();
+  else hydrateParticipantUtilityPages();
 }
 
 function hydrateParticipantUtilityPages() {
@@ -255,6 +268,25 @@ function hydrateParticipantUtilityPages() {
     });
 }
 
+function refreshParticipantPaymentStatus() {
+  if (!participantApi.enabled) {
+    patchRouteStatus('mypage', 'fallback');
+    return;
+  }
+  patchRouteStatus('mypage', 'loading');
+  participantApi.getMyPage()
+    .then((myPage) => patchParticipantState({
+      application: myPage.applications[0] ?? participantState.application,
+      paymentRecords: myPage.paymentRecords,
+      apiMode: 'api',
+      routeStatus: { ...participantState.routeStatus, mypage: 'ready' },
+    }))
+    .catch(() => patchParticipantState({
+      apiMode: 'fallback',
+      routeStatus: { ...participantState.routeStatus, mypage: 'fallback' },
+    }));
+}
+
 function loadTournament(tournamentId: string) {
   if (!participantApi.enabled || !tournamentId) return;
   patchRouteStatus('tournamentDetail', 'loading');
@@ -303,7 +335,8 @@ function submitApplication() {
     .then((createdApplication) => participantApi.getTournamentApplication(createdApplication.applicationId))
     .then((apiApplication) => {
       patchParticipantState({ application: apiApplication, apiMode: 'api' });
-      hydrateParticipantUtilityPages();
+      if (participantApi.applicationBridgeOnly) refreshParticipantPaymentStatus();
+      else hydrateParticipantUtilityPages();
     })
     .catch(() => patchParticipantState({ apiMode: 'fallback' }));
 }
@@ -516,8 +549,8 @@ function BottomNav({ active }: { active: string }) {
 function LoginScreen({ participantApiClient, socialLoginConfig = getSocialLoginConfig(), kakaoCallbackResult, kakaoContinuationStatus }: { participantApiClient?: ParticipantApiClient; socialLoginConfig?: SocialLoginConfig; kakaoCallbackResult?: KakaoCallbackResult | null; kakaoContinuationStatus?: { kind: 'loading' | 'error'; message: string } }) {
   const initialized = useRef(false);
   if (!initialized.current) {
-    if (isKakaoDevSessionSuccess(kakaoCallbackResult)) primeKakaoDevSession(kakaoCallbackResult);
     resetParticipantFlow(participantApiClient);
+    if (isKakaoDevSessionSuccess(kakaoCallbackResult)) primeKakaoDevSession(kakaoCallbackResult);
     initialized.current = true;
   }
 
@@ -938,9 +971,16 @@ function TerminalTournamentCard({ testID, compact = false }: { testID?: string; 
 }
 
 export function PaymentScreen() {
-  const { application, featuredTournament, paymentRecords, profile, tournamentDivisions } = useParticipantFlow();
+  const { application, featuredTournament, paymentRecords, profile, routeStatus, tournamentDivisions } = useParticipantFlow();
   const paymentRecord = paymentRecords[0];
   const divisionName = getApplicationDivisionName(application, getAvailableDivisions(tournamentDivisions), getAvailableDivisions(tournamentDivisions)[0]);
+  const backendStatus = paymentRecord?.status === 'operatorReview'
+    ? '운영자 확인 중'
+    : paymentRecord?.status === 'confirmedOffline'
+      ? '운영자 입금 확인 완료'
+      : paymentRecord?.status === 'notStartedSandbox'
+        ? '운영자 결제 안내 대기'
+        : paymentRecord?.status ?? '신청 접수 후 생성';
   return (
     <ParticipantRouteScaffold active="mypage">
       <PageHero testID="payment-screen" eyebrow="결제 안내" title="오프라인 결제 안내를 확인하세요" caption="신청 접수 후 운영자가 결제 방법과 확인 상태를 안내합니다." />
@@ -949,9 +989,10 @@ export function PaymentScreen() {
         <InfoListItem label="신청 부문" value={application ? divisionName : '신청 접수 후 확인'} />
         <InfoListItem label="안내 금액" value={paymentAmountCopy(paymentRecord)} />
       </InfoCard>
-      <InfoCard testID="payment-method" title="결제 방식"><Text style={styles.statusStrong}>운영자 오프라인 확인</Text><Text style={styles.caption}>{paymentRecord?.operatorNote ?? '결제 수단과 입금 확인은 운영자 안내를 따릅니다.'}</Text></InfoCard>
+      <InfoCard testID="payment-method" title="결제 방식"><Text style={styles.statusStrong}>운영자 오프라인 확인</Text><Text testID="payment-backend-status" style={styles.statusStrong}>{backendStatus}</Text>{paymentRecord ? <Text testID="payment-record-reference" style={styles.caption}>결제 기록 {paymentRecord.paymentRecordId}</Text> : null}<Text style={styles.caption}>{paymentRecord?.operatorNote ?? '결제 수단과 입금 확인은 운영자 안내를 따릅니다.'}</Text></InfoCard>
       <InfoCard title="환불 규정"><Text style={styles.caption}>대회 3일 전까지 100% · 3일 이내 불가 · 주최 측 취소 시 전액 환불. 취소와 환불은 1:1 문의로 운영자가 확인합니다.</Text></InfoCard>
-      <View testID="payment-readiness-notice"><Text testID="payment-local-notice" style={styles.blockerText}>이 화면에서는 결제가 진행되지 않습니다. 앱 내 결제 기능은 연결되지 않았습니다. 신청과 오프라인 결제의 운영자 확인 상태만 표시합니다.</Text></View>
+      <View testID="payment-readiness-notice"><RouteStatusNotice status={routeStatus.mypage} /><Text testID="payment-local-notice" style={styles.blockerText}>실시간 PG나 외부 결제 제공자를 사용하지 않습니다. 백엔드에 기록된 신청과 오프라인 결제의 운영자 확인 상태만 표시합니다.</Text></View>
+      <ActionButton testID="payment-status-refresh" label={routeStatus.mypage === 'loading' ? '결제 상태 확인 중' : '결제 상태 새로고침'} secondary onPress={refreshParticipantPaymentStatus} disabled={routeStatus.mypage === 'loading'} />
       <ActionButton testID="payment-support-button" label="결제 문의하기" onPress={() => router.push('/support')} />
     </ParticipantRouteScaffold>
   );

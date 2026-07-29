@@ -31,10 +31,12 @@ export type ParticipantApiConfig = {
   baseUrl?: string;
   bearerToken?: string;
   fetchImpl?: typeof fetch;
+  applicationBridgeOnly?: boolean;
 };
 
 export type ParticipantApiClient = {
   enabled: boolean;
+  applicationBridgeOnly: boolean;
   getTournaments: () => Promise<Tournament[]>;
   getTournament: (tournamentId: string) => Promise<TournamentDetail>;
   getParticipantProfile: () => Promise<ParticipantProfile>;
@@ -87,6 +89,7 @@ export function createParticipantApiClient(config: ParticipantApiConfig): Partic
 
   return {
     enabled,
+    applicationBridgeOnly: config.applicationBridgeOnly ?? false,
     getTournaments: () => request('/tournaments', { method: 'GET' }, (body) => tournamentListResponseSchema.parse(body).tournaments),
     getTournament: (tournamentId) => request(`/tournaments/${encodeURIComponent(tournamentId)}`, { method: 'GET' }, (body) => tournamentDetailSchema.parse(body)),
     getParticipantProfile: () => request('/participant/profile', { method: 'GET' }, (body) => participantProfileSchema.parse(body)),

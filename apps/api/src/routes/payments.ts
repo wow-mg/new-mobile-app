@@ -29,7 +29,7 @@ function paymentError(error: unknown) {
 export const paymentsRoute = new Hono<{ Variables: { participantId: string } }>()
   .use('*', async (c, next) => {
     const auth = consumeParticipantDevSession(c.req.header('authorization'));
-    if (!auth) {
+    if (!auth?.session.paymentProviderAccess) {
       return c.json(paymentApiErrorResponseSchema.parse({ error: 'PAYMENT_FORBIDDEN' }), 403);
     }
     c.set('participantId', auth.session.participantId);

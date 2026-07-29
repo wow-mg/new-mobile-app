@@ -1,27 +1,64 @@
 {
+  "schema": "wu-status/v1",
   "work_unit_id": "pool-ko-tournament",
   "title": "POOL+KO tournament generation and publication",
+  "stage": "04-mobile-app",
+  "state": "planned",
+  "owner_role": "Mobile App Dev",
+  "attempt": 1,
   "status": "ready_for_execution",
   "source": {
     "type": "workboard",
     "id": "e283defc-d297-4ed1-8207-99d3e96bbd55",
     "description": "Room-986 Product/Planning frozen POOL+KO rules captured 2026-07-28 15:01 KST"
   },
-  "current_stage": "03-contract-api",
+  "current_stage": "04-mobile-app",
   "ready_for_execution": true,
   "next_action": {
-    "owner_role": "Backend/API Integrator",
-    "workboard_card_id": "e8f59168-0d89-46fb-9012-d9a38d102b27",
-    "summary": "Implement POOL+KO deterministic pure engine and schema/contract packet from Product/Planning design artifact",
-    "input_artifact": "docs/plans/work-units/pool-ko-tournament/00-product-planning/pool-ko-design-packet.md",
+    "owner_role": "Mobile App Dev",
+    "workboard_card_ids": [
+      "72a99dfe-9568-4d2f-a469-4196ef4a389f",
+      "d4aa9401-565a-4e09-9335-05a3a7f1b4e0"
+    ],
+    "summary": "Implement POOL+KO Admin generation/review/lock/publish flow and participant bracket/schedule display flow from merged Backend/API DTO contract",
+    "input_artifacts": [
+      "docs/plans/work-units/pool-ko-tournament/00-product-planning/pool-ko-design-packet.md",
+      "docs/plans/work-units/pool-ko-tournament/03-contract-api/backend-api-evidence.md",
+      "packages/contracts/src/pool-ko.ts"
+    ],
     "expected_output_artifacts": [
-      "shared contracts or DTO stubs for POOL+KO",
-      "pure engine functions",
-      "unit and contract tests",
-      "Backend/API evidence summary"
+      "Admin UI flow implementation evidence",
+      "Participant app display implementation evidence",
+      "mobile tests for pool/KO states, bye/withdrawal rendering, and personal schedule rendering",
+      "QA/Release handoff summary"
     ]
   },
-  "human_gates": {
+  "reviewer": {
+    "required": true,
+    "status": "pending",
+    "agent": "wm-implementation-reviewer",
+    "evidence": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/jest-resolver-fix-evidence.md"
+  },
+  "human_gates": [],
+  "evidence": [
+    {
+      "path": "docs/plans/work-units/pool-ko-tournament/00-product-planning/pool-ko-design-packet.md",
+      "kind": "planning-artifact"
+    },
+    {
+      "path": "docs/plans/work-units/pool-ko-tournament/03-contract-api/backend-api-evidence.md",
+      "kind": "contract-evidence"
+    },
+    {
+      "path": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/jest-resolver-fix-evidence.md",
+      "kind": "test-evidence"
+    }
+  ],
+  "handoff": {
+    "next_role": "Mobile App Dev",
+    "next_artifact": "docs/plans/work-units/pool-ko-tournament/04-mobile-app/"
+  },
+  "human_gate_boundaries": {
     "production_release": "closed",
     "provider_console": "closed",
     "live_money": "closed",
@@ -29,8 +66,34 @@
     "secret_bearing_config": "closed"
   },
   "evidence_ladder": {
-    "required_level": "contract-and-unit-test",
+    "required_level": "L0",
     "qa_applicability": "backend contract/unit evidence first; Admin UI and Participant App QA after DTO handoff"
   },
-  "updated_at": "2026-07-28T19:20:00+09:00"
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-07-28T15:01:00+09:00",
+      "actor": "Product/Planning",
+      "action": "captured Room-986 Product/Planning frozen POOL+KO rules and prepared work unit"
+    },
+    {
+      "seq": 2,
+      "at": "2026-07-28T19:32:00+09:00",
+      "actor": "Backend/API Integrator",
+      "action": "completed local POOL+KO contract packet and deterministic engine evidence"
+    },
+    {
+      "seq": 3,
+      "at": "2026-07-28T19:58:00+09:00",
+      "actor": "Product/Planning",
+      "action": "recorded Backend/API DTO gate satisfied and routed next work to Mobile App Dev Admin and participant display slices"
+    },
+    {
+      "seq": 4,
+      "at": "2026-07-28T22:37:00+09:00",
+      "actor": "Product/Planning",
+      "action": "updated status artifact to wu-status/v1 before Railway development deployment gate recheck"
+    }
+  ],
+  "updated_at": "2026-07-28T22:37:00+09:00"
 }

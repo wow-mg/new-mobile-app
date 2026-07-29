@@ -408,9 +408,124 @@ describe('Home screen', () => {
     startParticipantSession();
     render(<PaymentScreen />);
 
-    expect(screen.getByTestId('payment-readiness-notice')).toHaveTextContent(/앱 내 결제 기능은 연결되지 않았습니다/);
-    expect(screen.getByTestId('payment-readiness-notice')).toHaveTextContent(/운영자 확인 상태만 표시/);
+    expect(screen.getByTestId('payment-readiness-notice')).toHaveTextContent(/실시간 PG.*사용하지 않습니다/);
+    expect(screen.getByTestId('payment-readiness-notice')).toHaveTextContent(/백엔드.*운영자 확인 상태/);
     expect(screen.queryByText(/결제가 완료되었어요/)).toBeNull();
+  });
+
+  it('refreshes the backend operator-managed payment record after application without calling payment-provider routes', async () => {
+    let applicationCreated = false;
+    const fetchImpl = jest.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/api/tournaments')) {
+        return { ok: true, status: 200, json: async () => ({ tournaments: [sandboxParticipantSession.featuredTournament] }) } as Response;
+      }
+      if (url.endsWith('/api/participant/profile') && init?.method === 'GET') {
+        return { ok: true, status: 200, json: async () => ({ ...sandboxParticipantSession.profile, duprId: 'DUPR-12345', duprStatus: 'selfReportedPendingOperatorReview' }) } as Response;
+      }
+      if (url.endsWith('/api/participant/profile') && init?.method === 'PATCH') {
+        return { ok: true, status: 200, json: async () => ({ ...sandboxParticipantSession.profile, duprId: 'DUPR-12345', duprStatus: 'selfReportedPendingOperatorReview' }) } as Response;
+      }
+      if (url.endsWith('/api/tournament-applications') && init?.method === 'POST') {
+        applicationCreated = true;
+        return { ok: true, status: 201, json: async () => ({
+          applicationId: 'application-api-bridge',
+          tournamentId: sandboxParticipantSession.featuredTournament.tournamentId,
+          participantId: sandboxParticipantSession.profile.participantId,
+          duprId: 'DUPR-12345',
+          divisionId: 'division_sandbox_mixed_35',
+          status: 'submitted',
+          submittedAt: '2026-07-28T14:00:00.000Z',
+          supportChannel: 'oneToOneInquiry',
+          paymentStatus: 'notStartedSandbox',
+          refundPolicy: 'participantSelfCancelDisabled',
+        }) } as Response;
+      }
+      if (url.endsWith('/api/tournament-applications/application-api-bridge')) {
+        return { ok: true, status: 200, json: async () => ({
+          applicationId: 'application-api-bridge',
+          tournamentId: sandboxParticipantSession.featuredTournament.tournamentId,
+          participantId: sandboxParticipantSession.profile.participantId,
+          duprId: 'DUPR-12345',
+          divisionId: 'division_sandbox_mixed_35',
+          status: 'submitted',
+          submittedAt: '2026-07-28T14:00:00.000Z',
+          supportChannel: 'oneToOneInquiry',
+          paymentStatus: 'notStartedSandbox',
+          refundPolicy: 'participantSelfCancelDisabled',
+        }) } as Response;
+      }
+      if (url.endsWith('/api/participant/mypage')) {
+        return { ok: true, status: 200, json: async () => ({
+          profile: { ...sandboxParticipantSession.profile, duprId: 'DUPR-12345', duprStatus: 'selfReportedPendingOperatorReview' },
+          applications: applicationCreated ? [{
+            applicationId: 'application-api-bridge',
+            tournamentId: sandboxParticipantSession.featuredTournament.tournamentId,
+            participantId: sandboxParticipantSession.profile.participantId,
+            duprId: 'DUPR-12345',
+            divisionId: 'division_sandbox_mixed_35',
+            status: 'submitted',
+            submittedAt: '2026-07-28T14:00:00.000Z',
+            supportChannel: 'oneToOneInquiry',
+            paymentStatus: 'notStartedSandbox',
+            refundPolicy: 'participantSelfCancelDisabled',
+          }] : [],
+          paymentRecords: applicationCreated ? [{
+            paymentRecordId: 'receipt-operator-managed-001',
+            applicationId: 'application-api-bridge',
+            participantId: sandboxParticipantSession.profile.participantId,
+            amountKrw: 60000,
+            paymentMode: 'operatorManagedOffline',
+            status: 'operatorReview',
+            operatorNote: '운영자 입금 확인 대기',
+            recordedAt: '2026-07-28T14:00:00.000Z',
+          }] : [],
+        }) } as Response;
+      }
+      throw new Error(`unexpected endpoint: ${url}`);
+    });
+    const apiClient = createParticipantApiClient({
+      baseUrl: 'https://api.example.invalid',
+      bearerToken: 'test-only-session',
+      applicationBridgeOnly: true,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    resetParticipantFlow(apiClient);
+    startParticipantSession();
+    saveParticipantDupr('DUPR-12345');
+    render(<><TournamentApplicationScreen /><PaymentScreen /></>);
+    await waitFor(() => expect(fetchImpl.mock.calls.some(([url, init]) =>
+      String(url).endsWith('/api/participant/profile') && init?.method === 'PATCH',
+    )).toBe(true));
+    fetchImpl.mockClear();
+
+    fireEvent.press(screen.getByTestId('application-cta'));
+
+    await waitFor(() => expect(getParticipantSnapshot().paymentRecords[0]).toMatchObject({
+      paymentRecordId: 'receipt-operator-managed-001',
+      paymentMode: 'operatorManagedOffline',
+      status: 'operatorReview',
+    }));
+    await waitFor(() => expect(getParticipantSnapshot().routeStatus.mypage).toBe('ready'));
+
+    expect(screen.getByTestId('payment-backend-status')).toHaveTextContent(/운영자 확인 중/);
+    expect(screen.getByTestId('payment-record-reference')).toHaveTextContent(/receipt-operator-managed-001/);
+    expect(fetchImpl.mock.calls.map(([url, init]) => [
+      init?.method ?? 'GET',
+      new URL(String(url)).pathname,
+    ])).toEqual([
+      ['POST', '/api/tournament-applications'],
+      ['GET', '/api/tournament-applications/application-api-bridge'],
+      ['GET', '/api/participant/mypage'],
+    ]);
+
+    fetchImpl.mockClear();
+    fireEvent.press(screen.getByTestId('payment-status-refresh'));
+    await waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(1));
+    expect(fetchImpl.mock.calls.map(([url, init]) => [
+      init?.method ?? 'GET',
+      new URL(String(url)).pathname,
+    ])).toEqual([['GET', '/api/participant/mypage']]);
   });
 
   it('shows application, payment, and refund as operator-confirmed reservation states', () => {

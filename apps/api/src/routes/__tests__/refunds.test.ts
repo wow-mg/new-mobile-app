@@ -36,6 +36,7 @@ describe('mocked refund/cancel/admin routes', () => {
       memberId: 'member-refund-test',
       kakaoUserId: 'kakao-refund-test',
       providerAccessToken: 'provider-test-fixture',
+      paymentProviderAccess: true,
     });
     participantHeaders = { authorization: `Bearer ${session.accessToken}`, 'content-type': 'application/json' };
   });

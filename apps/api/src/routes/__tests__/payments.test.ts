@@ -16,10 +16,38 @@ describe('sandbox payment endpoints', () => {
       memberId: 'member-payment-test',
       kakaoUserId: 'kakao-payment-test',
       providerAccessToken: 'provider-test-fixture',
+      paymentProviderAccess: true,
     });
     participantHeaders = { authorization: `Bearer ${session.accessToken}`, 'content-type': 'application/json' };
     await updateParticipantDupr('DUPR-12345');
     await createTournamentApplication({ tournamentId: 'tournament_sandbox_001' });
+  });
+
+  it('rejects a normal participant dev session before payment-provider behavior', async () => {
+    const session = issueParticipantDevSession({
+      memberId: 'member-participant-only',
+      kakaoUserId: 'kakao-participant-only',
+      providerAccessToken: 'provider-test-fixture',
+    });
+    const response = await app.request('/api/payments/orders', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        applicationId: 'application_tournament_sandbox_001_participant_sandbox_001',
+        paymentMode: 'card',
+        amount: 60000,
+        currency: 'KRW',
+        idempotencyKey: 'participant-session-payment-denied',
+      }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(paymentApiErrorResponseSchema.parse(await response.json())).toEqual({
+      error: 'PAYMENT_FORBIDDEN',
+    });
   });
 
   it('rejects server/operator bearer tokens at the participant payment boundary', async () => {

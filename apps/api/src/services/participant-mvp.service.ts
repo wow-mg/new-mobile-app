@@ -433,10 +433,12 @@ function maskSupportInquiryForCustomer(inquiry: SupportInquiry, applications: To
   return { ...inquiry, applicationId: application ? customerApplicationId(application) : inquiry.applicationId.replace(/[^a-z0-9]+/gi, '-') };
 }
 
-export async function getTournamentApplication(applicationId: string) {
+export async function getTournamentApplication(applicationId: string, participantId?: string) {
   if (useMemoryStore) {
     const application = memoryApplications.get(applicationId);
-    if (!application) throw new ParticipantMvpError(APPLICATION_NOT_FOUND_ERROR, 404);
+    if (!application || (participantId && application.participantId !== participantId)) {
+      throw new ParticipantMvpError(APPLICATION_NOT_FOUND_ERROR, 404);
+    }
     return application;
   }
 
@@ -445,8 +447,11 @@ export async function getTournamentApplication(applicationId: string) {
     .from(tournamentApplications)
     .where(eq(tournamentApplications.applicationId, applicationId))
     .limit(1);
-  if (!application) throw new ParticipantMvpError(APPLICATION_NOT_FOUND_ERROR, 404);
-  return parseApplicationRow(application);
+  const parsed = application ? parseApplicationRow(application) : undefined;
+  if (!parsed || (participantId && parsed.participantId !== participantId)) {
+    throw new ParticipantMvpError(APPLICATION_NOT_FOUND_ERROR, 404);
+  }
+  return parsed;
 }
 
 export async function getPaymentApplicationContext(applicationId: string) {
