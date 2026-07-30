@@ -10,6 +10,7 @@ import {
   REQUIRED_DUPR_ERROR,
   hasRequiredDupr,
   sandboxParticipantSession,
+  sandboxTournamentCatalog,
   saveSandboxDupr,
   describeApplicationPolicy,
   describeSupportRefundPolicyCopy,
@@ -49,6 +50,11 @@ const companyLegalInfo = [
   '주소: 서울특별시 강남구 도산대로46길 21, 비132호(논현동, 한진로즈힐아파트)',
   '개인정보처리방침 담당자: 홍승표',
   '대표번호: 02-570-1900',
+] as const;
+
+const companyReviewInfo = [
+  '판매상품: 피클볼 대회 참가권, 레슨 예약, 코트 대관, 행사/클리닉 참가권',
+  '서비스 제공기간: 결제일로부터 해당 대회·레슨·대관·행사 종료 시까지 또는 상품별 상세 안내에 따름',
 ] as const;
 
 const privacyPolicyDraft = '개인정보처리방침 (초안)\n\n와우그룹매니지먼트 주식회사(이하 “회사”)는 PickleHub(피클허브) 서비스\n이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 제30조에 따라\n개인정보를 보호하고 관련 고충을 신속하고 원활하게 처리하기 위하여 다음과\n같이 개인정보 처리방침을 수립·공개합니다.\n\n※ 본 문서는 초안이며, 법인명, 사업자등록번호, 대표자, 개인정보보호책임자\n이메일 등은 실제 정보로 최종 확인 후 사용하시기 바랍니다.\n\n제1조(개인정보의 처리 목적)\n\n1.  회원가입 및 관리\n\n-   회원 가입 의사 확인\n-   본인 확인 및 인증\n-   회원 자격 유지 및 관리\n-   서비스 부정 이용 방지\n-   공지사항 전달\n-   고객 문의 처리\n\n2.  서비스 제공\n\n-   피클볼 대회 참가 신청\n-   참가자 관리\n-   경기 일정 및 결과 제공\n-   푸시 알림 제공\n-   고객 문의 응대\n\n3.  소셜 로그인\n\n-   카카오 로그인\n-   Apple 로그인\n-   계정 연동 및 관리\n\n4.  마케팅(동의 시)\n\n-   이벤트 안내\n-   프로모션 제공\n\n제2조(처리하는 개인정보 항목)\n\n필수항목 - 이름 - 휴대전화번호 - 이메일 - 로그인 정보(카카오/Apple) -\n소셜 로그인 고유 식별자\n\n선택항목 - 프로필 이미지 - 성별 - 연령대 - 생일 - 출생 연도\n\n카카오 로그인 과정에서 성별, 연령대, 생일, 출생 연도는 카카오 계정 제공\n상태와 이용자 동의 여부에 따라 선택적으로 수집될 수 있으며, 회원가입 및\n계정 관리 목적 범위에서만 이용합니다.\n\n서비스 이용 과정에서 수집되는 정보 - IP 주소 - 접속 로그 - 쿠키 -\n기기정보 - 앱 버전 - 푸시 토큰\n\n제3조(개인정보 보유기간)\n\n회원정보는 회원 탈퇴 시까지 보관합니다. 다만 관련 법령에 따라 일정 기간\n보관이 필요한 경우에는 해당 기간 동안 보관합니다.\n\n제4조(제3자 제공)\n\n회사는 원칙적으로 개인정보를 외부에 제공하지 않습니다. 단, 피클볼 대회\n운영을 위해 대회 주최자에게 이름, 연락처, 참가정보를 제공할 수 있습니다.\n\n제5조(개인정보 처리의 위탁)\n\n회사는 원활한 서비스 제공을 위하여 다음과 같이 개인정보 처리를 위탁할 수\n있습니다. - Amazon Web Services(AWS) - Firebase - Apple - Kakao\n\n제6조(개인정보의 파기)\n\n보유기간이 종료되거나 처리 목적이 달성된 경우 지체 없이 파기합니다.\n전자파일은 복구 불가능한 방식으로 삭제하며, 종이 문서는 분쇄 또는\n소각합니다.\n\n제7조(정보주체의 권리)\n\n이용자는 개인정보 열람, 정정, 삭제, 처리정지 및 동의철회를 요청할 수\n있습니다.\n\n제8조(안전성 확보조치)\n\n-   개인정보 암호화\n-   접근권한 최소화\n-   접속기록 관리\n-   보안프로그램 운영\n\n제9조(쿠키)\n\n회사는 맞춤형 서비스 제공을 위해 쿠키를 사용할 수 있으며, 브라우저\n설정을 통해 거부할 수 있습니다.\n\n제10조(개인정보 보호책임자)\n\n담당자 : 홍승표 대표번호 : 02-570-1900\n\n제11조(권익침해 구제)\n\n개인정보분쟁조정위원회 : 1833-6972 개인정보침해신고센터 : 118\n\n제12조(처리방침 변경)\n\n본 개인정보처리방침은 2026년 7월 20일부터 적용됩니다.';
@@ -104,7 +110,7 @@ const initialParticipantState = (participantApi: ParticipantApiClient): Particip
   duprInput: sandboxParticipantSession.profile.duprId ?? '',
   application: null,
   featuredTournament: sandboxParticipantSession.featuredTournament,
-  tournaments: [sandboxParticipantSession.featuredTournament],
+  tournaments: sandboxTournamentCatalog,
   tournamentDivisions: [],
   supportCenter: fallbackSupportCenter,
   notifications: fallbackNotifications,
@@ -206,7 +212,7 @@ export function startParticipantSession() {
     .then(([tournaments, apiProfile]) => {
       patchParticipantState({
         featuredTournament: tournaments[0] ?? sandboxParticipantSession.featuredTournament,
-        tournaments: tournaments.length ? tournaments : [sandboxParticipantSession.featuredTournament],
+        tournaments: tournaments.length ? tournaments : sandboxTournamentCatalog,
         profile: apiProfile,
         duprInput: apiProfile.duprId ?? '',
         apiMode: 'api',
@@ -588,7 +594,7 @@ function LoginScreen({ participantApiClient, socialLoginConfig = getSocialLoginC
       <Pressable testID="sandbox-login-button" accessibilityRole="button" onPress={startSandboxPreview} style={[styles.btn, styles.previewButton]}><Text style={styles.previewButtonText}>대회 둘러보기</Text></Pressable>
       <Text testID="login-consent-copy" style={styles.hint}>처음이시면 자동으로 회원가입이 진행돼요</Text>
       <Pressable testID="signup-route-button" accessibilityRole="button" onPress={() => router.push('/signup')}><Text style={styles.linkText}>회원가입 폼 미리보기</Text></Pressable>
-    </View></View></View>
+    </View></View><CompanyLegalFooter /></View>
   );
 }
 
@@ -596,6 +602,7 @@ function CompanyLegalFooter() {
   return (
     <View testID="company-legal-footer" style={styles.legalFooter}>
       {companyLegalInfo.map((line) => <Text key={line} style={styles.caption}>{line}</Text>)}
+      {companyReviewInfo.map((line) => <Text key={line} style={styles.caption}>{line}</Text>)}
       <View style={styles.legalLinkRow}>
         <Pressable testID="mypage-privacy-link" accessibilityRole="link" onPress={() => router.push('/privacy-policy')}><Text style={styles.linkText}>개인정보처리방침</Text></Pressable>
         <Text style={styles.caption}>·</Text>
@@ -615,7 +622,7 @@ function ParticipantRouteScaffold({ active, children }: { active: string; childr
         <View style={styles.header}><View><Logo small /><Text style={styles.headerSubtitle}>대한피클볼협회 공식</Text></View><HeaderBell /></View>
         {children}
         <View testID="deferred-reference-screens" style={styles.sectionCard}><Text style={styles.sectionLabel}>운영 예정 기능</Text><Text style={styles.caption}>결제 · 환불 · 대진표 · 점수 입력 · 결과 확정은 운영자 안내에 따라 순차적으로 제공됩니다.</Text></View>
-        {active === 'mypage' ? <CompanyLegalFooter /> : null}
+        <CompanyLegalFooter />
       </ScrollView>
       <BottomNav active={active} />
     </View>
@@ -632,6 +639,7 @@ function PublicLegalScaffold({ testID, title, body, draftNotice }: { testID: str
         <InfoCard testID={testID} title={title}>
           <Text style={styles.legalDocumentText}>{body}</Text>
         </InfoCard>
+        <CompanyLegalFooter />
       </ScrollView>
     </View>
   );

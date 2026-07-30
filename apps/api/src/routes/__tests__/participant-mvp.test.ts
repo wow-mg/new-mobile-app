@@ -155,6 +155,12 @@ describe('participant MVP dev-preview endpoints', () => {
     const list = await requestJson('/api/tournaments');
     expect(list.res.status).toBe(200);
     const parsedList = tournamentListResponseSchema.parse(list.body);
+    expect(parsedList.tournaments.map((tournament) => tournament.title)).toEqual([
+      '2026 주말 한강리그 남자복식 2.5',
+      '2026 주말 한강리그 남자복식 3.0',
+      '2026 주말 한강리그 여자복식 2.5',
+      '2026 주중 한강리그 혼합복식',
+    ]);
     expect(parsedList.tournaments[0]?.tournamentId).toBe('tournament_sandbox_001');
 
     const detail = await requestJson('/api/tournaments/tournament_sandbox_001');
@@ -261,9 +267,9 @@ describe('participant MVP dev-preview endpoints', () => {
     expect(participantGamesResponseSchema.parse(games.body).games[0]).toMatchObject({
       applicationId: application.applicationId,
       tournamentId: 'tournament_sandbox_001',
-      tournamentTitle: '2026 협회장배 전국오픈',
+      tournamentTitle: '2026 주말 한강리그 남자복식 2.5',
       divisionName: '혼합복식',
-      location: '올림픽공원 SK핸드볼경기장',
+      location: '한강공원 광나루 피클볼장',
       applicationStatus: 'submitted',
       paymentStatus: 'notStartedSandbox',
       paymentAmountKrw: 60000,
