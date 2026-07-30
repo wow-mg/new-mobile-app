@@ -155,6 +155,12 @@ describe('participant MVP dev-preview endpoints', () => {
     const list = await requestJson('/api/tournaments');
     expect(list.res.status).toBe(200);
     const parsedList = tournamentListResponseSchema.parse(list.body);
+    expect(parsedList.tournaments.map((tournament) => tournament.title)).toEqual([
+      '2026 협회장배 전국오픈',
+      '서울 오픈 클럽 리그',
+      '부산 썸머 피클볼 챌린지',
+      '대전 루키스 데이',
+    ]);
     expect(parsedList.tournaments[0]?.tournamentId).toBe('tournament_sandbox_001');
 
     const detail = await requestJson('/api/tournaments/tournament_sandbox_001');

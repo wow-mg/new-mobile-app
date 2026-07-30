@@ -62,6 +62,9 @@ describe('Home screen', () => {
     expect(screen.getByTestId('login-logo').props.accessibilityLabel).toBe('Happickle');
     expect(screen.getByTestId('login-logo-text')).toHaveTextContent('Happickle');
     expect(screen.getByTestId('login-subtitle')).toHaveTextContent('대한피클볼협회 공식 대회 플랫폼');
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/사업자등록번호: 604-88-01570/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/판매상품: 피클볼 대회 참가권, 레슨 예약, 코트 대관, 행사\/클리닉 참가권/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/서비스 제공기간: 결제일로부터 해당 대회·레슨·대관·행사 종료 시까지 또는 상품별 상세 안내에 따름/);
     expect(screen.getByTestId('kakao-login-button')).toHaveTextContent('카카오로 계속하기');
     expect(screen.getByTestId('kakao-login-button').props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByTestId('apple-login-button')).toHaveTextContent('Apple로 계속하기');
@@ -350,6 +353,8 @@ describe('Home screen', () => {
     expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
     expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/사업자등록번호: 604-88-01570/);
     expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/대표번호: 02-570-1900/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/판매상품: 피클볼 대회 참가권, 레슨 예약, 코트 대관, 행사\/클리닉 참가권/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/서비스 제공기간: 결제일로부터 해당 대회·레슨·대관·행사 종료 시까지 또는 상품별 상세 안내에 따름/);
 
     fireEvent.press(screen.getByTestId('mypage-privacy-link'));
     expect(mockPush).toHaveBeenLastCalledWith('/privacy-policy');
@@ -375,6 +380,8 @@ describe('Home screen', () => {
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/생일/);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/출생 연도/);
     expect(screen.getByTestId('privacy-policy-screen')).toHaveTextContent(/선택적으로 수집/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/판매상품: 피클볼 대회 참가권, 레슨 예약, 코트 대관, 행사\/클리닉 참가권/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/서비스 제공기간: 결제일로부터 해당 대회·레슨·대관·행사 종료 시까지 또는 상품별 상세 안내에 따름/);
     expect(screen.queryByTestId('login-artboard')).toBeNull();
   });
 
@@ -384,6 +391,8 @@ describe('Home screen', () => {
     expect(screen.getByTestId('terms-screen')).toHaveTextContent(/\(주\) 와우매니지먼트그룹/);
     expect(screen.getByTestId('terms-screen')).toHaveTextContent(/주소: 서울특별시 강남구 도산대로46길 21, 비132호\(논현동, 한진로즈힐아파트\)/);
     expect(screen.getByTestId('terms-screen')).toHaveTextContent(/이 용 약 관/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/판매상품: 피클볼 대회 참가권, 레슨 예약, 코트 대관, 행사\/클리닉 참가권/);
+    expect(screen.getByTestId('company-legal-footer')).toHaveTextContent(/서비스 제공기간: 결제일로부터 해당 대회·레슨·대관·행사 종료 시까지 또는 상품별 상세 안내에 따름/);
     expect(screen.queryByTestId('login-artboard')).toBeNull();
   });
 
