@@ -1,4 +1,6 @@
 import {
+  type CreatePaymentOrderRequest,
+  type CreateRefundRequest,
   type CreateSupportInquiryRequest,
   type CreateTournamentApplicationRequest,
   type ParticipantGame,
@@ -11,14 +13,23 @@ import {
   type UpdateParticipantProfileRequest,
   type NotificationListResponse,
   type MyPageResponse,
+  type PaymentOrderResponse,
+  type RefundHistoryResponse,
+  type RefundRequest,
+  createPaymentOrderRequestSchema,
+  createRefundRequestSchema,
   createSupportInquiryRequestSchema,
   createTournamentApplicationRequestSchema,
   myPageResponseSchema,
   notificationListResponseSchema,
+  paymentApiErrorResponseSchema,
+  paymentOrderResponseSchema,
   participantApiErrorResponseSchema,
   participantApiHttpErrorCodeSchema,
   participantGamesResponseSchema,
   participantProfileSchema,
+  refundHistoryResponseSchema,
+  refundRequestSchema,
   supportCenterResponseSchema,
   supportInquirySchema,
   tournamentApplicationSchema,
@@ -48,6 +59,10 @@ export type ParticipantApiClient = {
   updateParticipantProfile: (input: UpdateParticipantProfileRequest) => Promise<ParticipantProfile>;
   createTournamentApplication: (input: CreateTournamentApplicationRequest) => Promise<TournamentApplication>;
   getTournamentApplication: (applicationId: string) => Promise<TournamentApplication>;
+  createPaymentOrder: (input: CreatePaymentOrderRequest) => Promise<PaymentOrderResponse>;
+  getPaymentStatus: (paymentRecordId: string) => Promise<PaymentOrderResponse>;
+  requestRefund: (paymentRecordId: string, input: CreateRefundRequest) => Promise<RefundRequest>;
+  getRefundHistory: (paymentRecordId: string) => Promise<RefundHistoryResponse>;
   requestParticipantSelfCancel: (applicationId: string) => Promise<never>;
 };
 
@@ -78,9 +93,14 @@ export function createParticipantApiClient(config: ParticipantApiConfig): Partic
 
     if (!response.ok) {
       const body = await response.json().catch(() => null) as { error?: unknown } | null;
-      const parsedError = participantApiErrorResponseSchema.safeParse(body);
+      const parsedParticipantError = participantApiErrorResponseSchema.safeParse(body);
+      const parsedPaymentError = paymentApiErrorResponseSchema.safeParse(body);
       const fallbackError = participantApiHttpErrorCodeSchema.parse(`PARTICIPANT_API_HTTP_${response.status}`);
-      const errorCode = parsedError.success ? parsedError.data.error : fallbackError;
+      const errorCode = parsedParticipantError.success
+        ? parsedParticipantError.data.error
+        : parsedPaymentError.success
+          ? parsedPaymentError.data.error
+          : fallbackError;
       throw new Error(errorCode);
     }
 
@@ -101,6 +121,10 @@ export function createParticipantApiClient(config: ParticipantApiConfig): Partic
     updateParticipantProfile: (input) => request('/participant/profile', { method: 'PATCH', body: JSON.stringify(updateParticipantProfileRequestSchema.parse(input)) }, (body) => participantProfileSchema.parse(body)),
     createTournamentApplication: (input) => request('/tournament-applications', { method: 'POST', body: JSON.stringify(createTournamentApplicationRequestSchema.parse(input)) }, (body) => tournamentApplicationSchema.parse(body)),
     getTournamentApplication: (applicationId) => request(`/tournament-applications/${encodeURIComponent(applicationId)}`, { method: 'GET' }, (body) => tournamentApplicationSchema.parse(body)),
+    createPaymentOrder: (input) => request('/payments/orders', { method: 'POST', body: JSON.stringify(createPaymentOrderRequestSchema.parse(input)) }, (body) => paymentOrderResponseSchema.parse(body)),
+    getPaymentStatus: (paymentRecordId) => request(`/payments/${encodeURIComponent(paymentRecordId)}`, { method: 'GET' }, (body) => paymentOrderResponseSchema.parse(body)),
+    requestRefund: (paymentRecordId, input) => request(`/payments/${encodeURIComponent(paymentRecordId)}/refunds`, { method: 'POST', body: JSON.stringify(createRefundRequestSchema.parse(input)) }, (body) => refundRequestSchema.parse(body)),
+    getRefundHistory: (paymentRecordId) => request(`/payments/${encodeURIComponent(paymentRecordId)}/refunds`, { method: 'GET' }, (body) => refundHistoryResponseSchema.parse(body)),
     requestParticipantSelfCancel: (applicationId) => request(`/tournament-applications/${encodeURIComponent(applicationId)}`, { method: 'DELETE' }, () => {
       throw new Error('PARTICIPANT_SELF_CANCEL_UNEXPECTED_SUCCESS');
     }),
