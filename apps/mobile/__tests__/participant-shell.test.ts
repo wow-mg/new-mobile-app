@@ -183,9 +183,10 @@ describe('participant shell sandbox contract', () => {
     startParticipantSession();
     render(React.createElement(TournamentsScreen));
     expect(screen.getByTestId('explore-home')).toHaveTextContent(/어떤 대회에 나가볼까요/);
-    expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 1개');
-    expect(screen.getByTestId('court-preview')).toBeTruthy();
-    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/PickleHub Open/);
+    expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 4개');
+    expect(screen.getAllByTestId('court-preview')).toHaveLength(4);
+    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/2026 주말 한강리그 남자복식 2.5/);
+    expect(screen.getAllByTestId('api-tournament-card')).toHaveLength(3);
 
     fireEvent.press(screen.getByTestId('mock-tournament-card'));
     expect(mockPush).toHaveBeenLastCalledWith(`/tournaments/${sandboxParticipantSession.featuredTournament.tournamentId}`);

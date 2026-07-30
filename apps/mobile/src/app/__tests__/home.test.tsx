@@ -273,8 +273,12 @@ describe('Home screen', () => {
     expect(screen.getByTestId('header-logo')).toHaveStyle({ height: 40, width: 126 });
     expect(screen.getByTestId('header-bell')).toBeTruthy();
     expect(screen.getByTestId('explore-home')).toHaveTextContent(/어떤 대회에 나가볼까요/);
-    expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 1개');
-    expect(screen.getByTestId('court-preview')).toBeTruthy();
+    expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 4개');
+    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/2026 주말 한강리그 남자복식 2.5/);
+    expect(screen.getAllByTestId('api-tournament-card')).toHaveLength(3);
+    expect(screen.getByText('2026 주중 한강리그 혼합복식')).toBeTruthy();
+    expect(screen.getAllByText(/팀당 60,000원/)).toHaveLength(4);
+    expect(screen.getAllByTestId('court-preview')).toHaveLength(4);
     expect(screen.queryByTestId('participant-route-state')).toBeNull();
 
     fireEvent.press(screen.getByTestId('mock-tournament-card'));
@@ -625,8 +629,10 @@ describe('Home screen', () => {
     startParticipantSession();
     render(<TournamentsScreen />);
 
-    await waitFor(() => expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 1개'));
-    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/PickleHub Open/);
+    await waitFor(() => expect(screen.getByTestId('participant-api-mode')).toHaveTextContent('총 4개'));
+    expect(screen.getByTestId('mock-tournament-card')).toHaveTextContent(/2026 주말 한강리그 남자복식 2.5/);
+    expect(screen.getAllByTestId('api-tournament-card')).toHaveLength(3);
+    expect(screen.getByText('2026 주중 한강리그 혼합복식')).toBeTruthy();
   });
 
   it('marks utility routes independently when my page hydration degrades', async () => {

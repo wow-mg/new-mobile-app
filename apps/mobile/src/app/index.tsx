@@ -10,6 +10,7 @@ import {
   REQUIRED_DUPR_ERROR,
   hasRequiredDupr,
   sandboxParticipantSession,
+  sandboxTournamentCatalog,
   saveSandboxDupr,
   describeApplicationPolicy,
   describeSupportRefundPolicyCopy,
@@ -109,7 +110,7 @@ const initialParticipantState = (participantApi: ParticipantApiClient): Particip
   duprInput: sandboxParticipantSession.profile.duprId ?? '',
   application: null,
   featuredTournament: sandboxParticipantSession.featuredTournament,
-  tournaments: [sandboxParticipantSession.featuredTournament],
+  tournaments: sandboxTournamentCatalog,
   tournamentDivisions: [],
   supportCenter: fallbackSupportCenter,
   notifications: fallbackNotifications,
@@ -211,7 +212,7 @@ export function startParticipantSession() {
     .then(([tournaments, apiProfile]) => {
       patchParticipantState({
         featuredTournament: tournaments[0] ?? sandboxParticipantSession.featuredTournament,
-        tournaments: tournaments.length ? tournaments : [sandboxParticipantSession.featuredTournament],
+        tournaments: tournaments.length ? tournaments : sandboxTournamentCatalog,
         profile: apiProfile,
         duprInput: apiProfile.duprId ?? '',
         apiMode: 'api',

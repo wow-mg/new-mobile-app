@@ -39,17 +39,54 @@ export const supportRefundPolicyFaqQuestions = [
   '대회 신청을 취소하고 싶어요.',
 ];
 
-export const sandboxFeaturedTournament: MockTournament = {
-  tournamentId: 'tournament_sandbox_001',
-  title: 'PickleHub Open',
-  division: 'Mixed Doubles 3.5+',
-  location: 'PickleHub Center Court',
-  startsAt: '2026-08-09T09:00:00.000+09:00',
-  applicationStatus: 'available',
-  requiresDupr: true,
-  paymentMode: 'operatorManagedOffline',
-  cancellationPolicy: 'operatorSupportOnly',
-};
+export const sandboxTournamentCatalog: MockTournament[] = [
+  {
+    tournamentId: 'tournament_sandbox_001',
+    title: '2026 주말 한강리그 남자복식 2.5',
+    division: '남자복식 2.5 · 팀당 60,000원',
+    location: '한강공원 광나루 피클볼장',
+    startsAt: '2026-08-09T09:00:00.000+09:00',
+    applicationStatus: 'available',
+    requiresDupr: true,
+    paymentMode: 'operatorManagedOffline',
+    cancellationPolicy: 'operatorSupportOnly',
+  },
+  {
+    tournamentId: 'tournament_sandbox_002',
+    title: '2026 주말 한강리그 남자복식 3.0',
+    division: '남자복식 3.0 · 팀당 60,000원',
+    location: '한강공원 광나루 피클볼장',
+    startsAt: '2026-08-16T09:00:00.000+09:00',
+    applicationStatus: 'available',
+    requiresDupr: true,
+    paymentMode: 'operatorManagedOffline',
+    cancellationPolicy: 'operatorSupportOnly',
+  },
+  {
+    tournamentId: 'tournament_sandbox_003',
+    title: '2026 주말 한강리그 여자복식 2.5',
+    division: '여자복식 2.5 · 팀당 60,000원',
+    location: '한강공원 광나루 피클볼장',
+    startsAt: '2026-08-23T09:00:00.000+09:00',
+    applicationStatus: 'available',
+    requiresDupr: true,
+    paymentMode: 'operatorManagedOffline',
+    cancellationPolicy: 'operatorSupportOnly',
+  },
+  {
+    tournamentId: 'tournament_sandbox_004',
+    title: '2026 주중 한강리그 혼합복식',
+    division: '혼합복식 · 팀당 60,000원',
+    location: '한강공원 광나루 피클볼장',
+    startsAt: '2026-08-26T19:00:00.000+09:00',
+    applicationStatus: 'available',
+    requiresDupr: true,
+    paymentMode: 'operatorManagedOffline',
+    cancellationPolicy: 'operatorSupportOnly',
+  },
+];
+
+export const sandboxFeaturedTournament: MockTournament = sandboxTournamentCatalog[0]!;
 
 export const sandboxParticipantSession: ParticipantShellState = {
   sessionActor: {
