@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  INICIS_INIAPI_DEFERRED_UNSUPPORTED,
   INICIS_INIAPI_PRIVATE_VALUE_MARKERS,
   buildInicisIniapiFullRefundRequest,
   buildInicisIniapiPartialRefundRequest,
@@ -9,12 +10,10 @@ import {
 
 const fixture = {
   iniapiKey: 'fixture-iniapi-key',
-  paymethod: 'Card',
   timestamp: '20260730133122',
   clientIp: 'fixture-client-ip',
   mid: 'fixture-mid',
   tid: 'fixture-provider-tid',
-  msg: 'Fixture refund',
 };
 
 describe('KG Inicis INIAPI refund provider adapter', () => {
@@ -24,32 +23,54 @@ describe('KG Inicis INIAPI refund provider adapter', () => {
       mid: '',
       clientIp: '',
       tid: '',
-      paymethod: '',
     });
     expect(Object.values(INICIS_INIAPI_PRIVATE_VALUE_MARKERS).every((value) => value === ''))
       .toBe(true);
+  });
+
+  it('records virtual-account refund as deferred unsupported metadata', () => {
+    expect(INICIS_INIAPI_DEFERRED_UNSUPPORTED).toEqual({
+      virtualAccountRefund: {
+        supported: false,
+        requiredPrivateMarker: 'iniapiIv',
+        endpoints: {
+          full: 'https://iniapi.inicis.com/v2/pg/refund/vacct',
+          partial: 'https://iniapi.inicis.com/v2/pg/partialRefund/vacct',
+        },
+      },
+    });
   });
 
   it('builds a full refund descriptor with the documented SHA-512 hex hash', () => {
     const request = buildInicisIniapiFullRefundRequest(fixture);
 
     expect(request).toEqual({
-      url: 'https://iniapi.inicis.com/api/v1/refund',
+      url: 'https://iniapi.inicis.com/v2/pg/refund',
       method: 'POST',
       headers: {
-        'content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+        'content-type': 'application/json; charset=utf-8',
       },
       body: expect.any(String),
     });
-    expect(Object.fromEntries(new URLSearchParams(request.body))).toEqual({
-      type: 'Refund',
-      paymethod: fixture.paymethod,
+    expect(JSON.parse(request.body)).toEqual({
+      mid: fixture.mid,
+      type: 'refund',
       timestamp: fixture.timestamp,
       clientIp: fixture.clientIp,
-      mid: fixture.mid,
-      tid: fixture.tid,
-      msg: fixture.msg,
-      hashData: '15f394ad5c6587794c0d9a47044c89aad454c5948a0e70638c3038fe051bf0884a35cf854d3c0f0b2e410414e7291272956278867bd8a9f69ebaf4db7eca49fe',
+      data: { tid: fixture.tid },
+      hashData: 'd5882f0bec6d2aa0a0c53ec81f5379cc4d1fd68f2db9f704c5355905322ac99518e98000426e2690ce582377fc911d9d3a3bc9eb89353dadf2e574055f03a656',
+    });
+  });
+
+  it('removes backslashes only from the full refund hash input', () => {
+    const request = buildInicisIniapiFullRefundRequest({
+      ...fixture,
+      tid: 'fixture-provider\\tid',
+    });
+
+    expect(JSON.parse(request.body)).toMatchObject({
+      data: { tid: 'fixture-provider\\tid' },
+      hashData: '2ae7e0d4e718658c730f856a20d8505e2bf3bf3b3d5b2099b33f8d09202e7b4c69708b83b7191dbe0357ae19aa605c9d547a477a5fe343c3490ddd8f91ba275a',
     });
   });
 
@@ -58,43 +79,25 @@ describe('KG Inicis INIAPI refund provider adapter', () => {
       ...fixture,
       price: 5000,
       confirmPrice: 7000,
-      currency: 'WON',
-      tax: 455,
-      taxFree: 0,
     });
 
-    expect(request.url).toBe('https://iniapi.inicis.com/api/v1/refund');
+    expect(request.url).toBe('https://iniapi.inicis.com/v2/pg/partialRefund');
     expect(request.method).toBe('POST');
     expect(request.headers).toEqual({
-      'content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+      'content-type': 'application/json; charset=utf-8',
     });
-    expect(Object.fromEntries(new URLSearchParams(request.body))).toEqual({
-      type: 'PartialRefund',
-      paymethod: fixture.paymethod,
+    expect(JSON.parse(request.body)).toEqual({
+      mid: fixture.mid,
+      type: 'partialRefund',
       timestamp: fixture.timestamp,
       clientIp: fixture.clientIp,
-      mid: fixture.mid,
-      tid: fixture.tid,
-      msg: fixture.msg,
-      price: '5000',
-      confirmPrice: '7000',
-      currency: 'WON',
-      tax: '455',
-      taxFree: '0',
-      hashData: '8fb4f8a3a3d8dc3ff8b2595c49b0012100dc9a44c38c39817de28cb89739df75783c570cb32f762026addbbd26777c0545520f7b9fdd20fda6ece2a9ff733fdd',
+      data: {
+        tid: fixture.tid,
+        price: '5000',
+        confirmPrice: '7000',
+      },
+      hashData: '14098b88408bf8b28b4dce1cecb61340508e4e6c493647338f42d31e89120b0ae779d8515a83b776e3e633a9d215ec191403c253669e872e94034d4b85ca8aa1',
     });
-  });
-
-  it('omits optional partial refund fields when the caller does not provide them', () => {
-    const body = new URLSearchParams(buildInicisIniapiPartialRefundRequest({
-      ...fixture,
-      price: 5000,
-      confirmPrice: 7000,
-    }).body);
-
-    expect(body.has('currency')).toBe(false);
-    expect(body.has('tax')).toBe(false);
-    expect(body.has('taxFree')).toBe(false);
   });
 
   it.each([
@@ -110,23 +113,6 @@ describe('KG Inicis INIAPI refund provider adapter', () => {
       ...fixture,
       price,
       confirmPrice,
-    })).toThrowError('INICIS_INVALID_PARTIAL_REFUND_AMOUNT');
-  });
-
-  it('fails closed when partial tax fields are invalid or inconsistent', () => {
-    expect(() => buildInicisIniapiPartialRefundRequest({
-      ...fixture,
-      price: 5000,
-      confirmPrice: 7000,
-      tax: -1,
-    })).toThrowError('INICIS_INVALID_PARTIAL_REFUND_AMOUNT');
-
-    expect(() => buildInicisIniapiPartialRefundRequest({
-      ...fixture,
-      price: 5000,
-      confirmPrice: 7000,
-      tax: 4500,
-      taxFree: 1000,
     })).toThrowError('INICIS_INVALID_PARTIAL_REFUND_AMOUNT');
   });
 

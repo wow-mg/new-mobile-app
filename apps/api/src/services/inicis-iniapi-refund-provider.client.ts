@@ -1,19 +1,18 @@
 import { createHash } from 'node:crypto';
 
-const INICIS_INIAPI_REFUND_URL = 'https://iniapi.inicis.com/api/v1/refund';
-const INICIS_INIAPI_FORM_CONTENT_TYPE =
-  'application/x-www-form-urlencoded;charset=utf-8';
+const INICIS_INIAPI_FULL_REFUND_URL = 'https://iniapi.inicis.com/v2/pg/refund';
+const INICIS_INIAPI_PARTIAL_REFUND_URL =
+  'https://iniapi.inicis.com/v2/pg/partialRefund';
+const INICIS_INIAPI_JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
 
 type InicisIniapiFields = Record<string, string | undefined>;
 
 type InicisIniapiCommonRefundInput = {
   iniapiKey: string;
-  paymethod: string;
   timestamp: string;
   clientIp: string;
   mid: string;
   tid: string;
-  msg: string;
 };
 
 export const INICIS_INIAPI_PRIVATE_VALUE_MARKERS = {
@@ -21,7 +20,17 @@ export const INICIS_INIAPI_PRIVATE_VALUE_MARKERS = {
   mid: '',
   clientIp: '',
   tid: '',
-  paymethod: '',
+} as const;
+
+export const INICIS_INIAPI_DEFERRED_UNSUPPORTED = {
+  virtualAccountRefund: {
+    supported: false,
+    requiredPrivateMarker: 'iniapiIv',
+    endpoints: {
+      full: 'https://iniapi.inicis.com/v2/pg/refund/vacct',
+      partial: 'https://iniapi.inicis.com/v2/pg/partialRefund/vacct',
+    },
+  },
 } as const;
 
 export type InicisIniapiRefundResult =
@@ -50,41 +59,42 @@ function createSha512Hex(value: string) {
   return createHash('sha512').update(value).digest('hex');
 }
 
-function buildRequest(body: URLSearchParams) {
+function stringifyWithoutBackslashes(value: unknown) {
+  return JSON.stringify(value).replace(/\\/g, '');
+}
+
+function buildRequest(url: string, body: unknown) {
   return {
-    url: INICIS_INIAPI_REFUND_URL,
+    url,
     method: 'POST' as const,
     headers: {
-      'content-type': INICIS_INIAPI_FORM_CONTENT_TYPE,
+      'content-type': INICIS_INIAPI_JSON_CONTENT_TYPE,
     },
-    body: body.toString(),
+    body: JSON.stringify(body),
   };
 }
 
 export function buildInicisIniapiFullRefundRequest(
   input: InicisIniapiCommonRefundInput,
 ) {
-  const type = 'Refund';
+  const type = 'refund';
+  const data = { tid: input.tid };
   const hashData = createSha512Hex(
     input.iniapiKey
-      + type
-      + input.paymethod
-      + input.timestamp
-      + input.clientIp
       + input.mid
-      + input.tid,
+      + type
+      + input.timestamp
+      + stringifyWithoutBackslashes(data),
   );
 
-  return buildRequest(new URLSearchParams({
+  return buildRequest(INICIS_INIAPI_FULL_REFUND_URL, {
+    mid: input.mid,
     type,
-    paymethod: input.paymethod,
     timestamp: input.timestamp,
     clientIp: input.clientIp,
-    mid: input.mid,
-    tid: input.tid,
-    msg: input.msg,
+    data,
     hashData,
-  }));
+  });
 }
 
 function isSafeNonNegativeInteger(value: number) {
@@ -94,16 +104,11 @@ function isSafeNonNegativeInteger(value: number) {
 function assertValidPartialAmounts(input: {
   price: number;
   confirmPrice: number;
-  tax?: number;
-  taxFree?: number;
 }) {
   if (
     !Number.isSafeInteger(input.price)
     || input.price <= 0
     || !isSafeNonNegativeInteger(input.confirmPrice)
-    || (input.tax !== undefined && !isSafeNonNegativeInteger(input.tax))
-    || (input.taxFree !== undefined && !isSafeNonNegativeInteger(input.taxFree))
-    || (input.tax ?? 0) + (input.taxFree ?? 0) > input.price
   ) {
     throw new Error('INICIS_INVALID_PARTIAL_REFUND_AMOUNT');
   }
@@ -113,45 +118,34 @@ export function buildInicisIniapiPartialRefundRequest(
   input: InicisIniapiCommonRefundInput & {
     price: number;
     confirmPrice: number;
-    currency?: string;
-    tax?: number;
-    taxFree?: number;
   },
 ) {
   assertValidPartialAmounts(input);
 
-  const type = 'PartialRefund';
+  const type = 'partialRefund';
   const price = String(input.price);
   const confirmPrice = String(input.confirmPrice);
-  const hashData = createSha512Hex(
-    input.iniapiKey
-      + type
-      + input.paymethod
-      + input.timestamp
-      + input.clientIp
-      + input.mid
-      + input.tid
-      + price
-      + confirmPrice,
-  );
-  const body = new URLSearchParams({
-    type,
-    paymethod: input.paymethod,
-    timestamp: input.timestamp,
-    clientIp: input.clientIp,
-    mid: input.mid,
+  const data = {
     tid: input.tid,
-    msg: input.msg,
     price,
     confirmPrice,
+  };
+  const hashData = createSha512Hex(
+    input.iniapiKey
+      + input.mid
+      + type
+      + input.timestamp
+      + stringifyWithoutBackslashes(data),
+  );
+
+  return buildRequest(INICIS_INIAPI_PARTIAL_REFUND_URL, {
+    mid: input.mid,
+    type,
+    timestamp: input.timestamp,
+    clientIp: input.clientIp,
+    data,
     hashData,
   });
-
-  if (input.currency !== undefined) body.set('currency', input.currency);
-  if (input.tax !== undefined) body.set('tax', String(input.tax));
-  if (input.taxFree !== undefined) body.set('taxFree', String(input.taxFree));
-
-  return buildRequest(body);
 }
 
 function assertSuccessfulRefundResponse(fields: InicisIniapiFields) {
