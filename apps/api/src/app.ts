@@ -19,12 +19,13 @@ import { paymentsRoute } from './routes/payments.js';
 import { paymentProviderWebhookRoute } from './routes/payment-provider-webhook.js';
 import { Env } from './env.js';
 import { consumeParticipantDevSession } from './services/participant-session.service.js';
+import { adminTournamentDraftRoute, organizerTournamentDraftRoute } from './routes/tournament-drafts.js';
 
 const apiBearerTokens = [Env.API_BEARER_TOKEN, Env.PARTICIPANT_PREVIEW_BEARER_TOKEN].filter(
   (token): token is string => Boolean(token),
 );
 const generalApiBearerAuth = bearerAuth({ token: apiBearerTokens });
-const roleScopedPath = /^\/api\/(?:payments(?:\/|$)|admin(?:\/|$))/;
+const roleScopedPath = /^\/api\/(?:payments(?:\/|$)|admin(?:\/|$)|organizer(?:\/|$))/;
 function isParticipantDevSessionRequest(method: string, path: string) {
   if ((method === 'GET' || method === 'PATCH') && path === '/api/participant/profile') return true;
   if (method === 'GET' && path === '/api/participant/mypage') return true;
@@ -87,4 +88,6 @@ export const app = new Hono()
   .route('/api/tournament-applications', tournamentApplicationsRoute)
   .route('/api/payments/providers/kg-inicis', paymentProviderWebhookRoute)
   .route('/api/payments', paymentsRoute)
+  .route('/api/organizer/tournament-drafts', organizerTournamentDraftRoute)
+  .route('/api/admin/tournaments', adminTournamentDraftRoute)
   .route('/api/admin', adminOperatorRoute);

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export * from './pool-ko.js';
+export * from './tournament-draft.js';
 
 export const COUNTER_INCREMENT = 1;
 

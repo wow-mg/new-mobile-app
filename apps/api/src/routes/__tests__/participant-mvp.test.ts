@@ -33,6 +33,14 @@ describe('participant MVP dev-preview endpoints', () => {
     resetParticipantDevSessions();
   });
 
+  it('preserves the four-item Gwangnaru Inicis review catalog', async () => {
+    const catalog = await requestJson('/api/tournaments');
+    expect(catalog.res.status).toBe(200);
+    const tournaments = tournamentListResponseSchema.parse(catalog.body).tournaments;
+    expect(tournaments).toHaveLength(4);
+    expect(tournaments.every(({ location }) => location === '한강공원 광나루 피클볼장')).toBe(true);
+  });
+
   it('allows an issued participant dev session only across the participant application/mypage bridge', async () => {
     const session = issueParticipantDevSession({
       memberId: 'member-participant-bridge',

@@ -50,6 +50,13 @@
       "when": 1785213171246,
       "tag": "0006_public_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785457152465,
+      "tag": "0007_tournament_draft_approval",
+      "breakpoints": true
     }
   ]
 }
