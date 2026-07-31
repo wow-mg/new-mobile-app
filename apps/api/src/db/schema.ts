@@ -54,6 +54,55 @@ export const tournamentDivisions = pgTable('tournament_divisions', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const tournamentDrafts = pgTable('tournament_drafts', {
+  draftId: text('draft_id').primaryKey(),
+  organizerId: text('organizer_id').notNull(),
+  status: text('status').notNull(),
+  title: text('title').notNull(),
+  location: text('location').notNull(),
+  startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
+  applicationStatus: text('application_status').notNull(),
+  requiresDupr: boolean('requires_dupr').notNull().default(true),
+  paymentMode: text('payment_mode').notNull(),
+  cancellationPolicy: text('cancellation_policy').notNull(),
+  fullRefundCutoffHours: integer('full_refund_cutoff_hours'),
+  partialRefundCutoffHours: integer('partial_refund_cutoff_hours'),
+  partialRefundPercent: integer('partial_refund_percent'),
+  reviewReason: text('review_reason'),
+  submittedAt: timestamp('submitted_at', { withTimezone: true }),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  publishedTournamentId: text('published_tournament_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const tournamentDraftDivisions = pgTable('tournament_draft_divisions', {
+  draftDivisionId: text('draft_division_id').primaryKey(),
+  draftId: text('draft_id').notNull().references(() => tournamentDrafts.draftId, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  name: text('name').notNull(),
+  skillLevel: text('skill_level'),
+  teamType: text('team_type').notNull(),
+  entryFeeKrw: integer('entry_fee_krw').notNull(),
+  capacityTeams: integer('capacity_teams'),
+  poolKoConfig: jsonb('pool_ko_config').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const tournamentDraftEvents = pgTable('tournament_draft_events', {
+  eventId: text('event_id').primaryKey(),
+  draftId: text('draft_id').notNull().references(() => tournamentDrafts.draftId, { onDelete: 'cascade' }),
+  actorId: text('actor_id').notNull(),
+  actorRole: text('actor_role').notNull(),
+  fromStatus: text('from_status'),
+  toStatus: text('to_status').notNull(),
+  reason: text('reason'),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const participantProfiles = pgTable('participant_profiles', {
   participantId: text('participant_id').primaryKey(),
   displayName: text('display_name').notNull(),
